@@ -3,9 +3,10 @@
 
 
 ### tutos
-* [NeuralNetworks](https://www.youtube.com/watch?v=XJ7HLz9VYz0&list=PLRqwX-V7Uu6aCibgK1PTWWu9by6XFdCfh)
-* [TensorFlow.js series](https://www.youtube.com/watch?v=Qt3ZABW5lD0&list=PLRqwX-V7Uu6YIeVA3dNxbR9PYj4wV31oQ)
-* [Tuto Tensoflow]
+* [Tuto NeuralNetworks](https://www.youtube.com/watch?v=XJ7HLz9VYz0&list=PLRqwX-V7Uu6aCibgK1PTWWu9by6XFdCfh)
+* [Tuto TensorFlow.js](https://www.youtube.com/watch?v=Qt3ZABW5lD0&list=PLRqwX-V7Uu6YIeVA3dNxbR9PYj4wV31oQ)
+* [Tuto Tensoflow](https://www.youtube.com/watch?v=Qt3ZABW5lD0)
+* [Tuto ml5](https://thecodingtrain.com/tracks/ml5js-beginners-guide)
 
 ### samples Toy Neural Network
 * [xor](./Toy-Neural-Network-JS-master/examples/xor/index.html)
