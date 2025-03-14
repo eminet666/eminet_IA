@@ -2,9 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../eminet_IA_/2_tuto_tensorFlow"
 		}
 	],
 	"settings": {}
