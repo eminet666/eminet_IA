@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test du Modèle ml5.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+</head>
+
+<body>
+    <h1>Test du modèle entraîné</h1>
+    <input type="file" id="fileInput" />
+    <br />
+    <img id="preview" width="224" height="224" />
+    <p id="result">Résultat : En attente...</p>
+
+    <script>
+        let nn; // Stocker le modèle ml5
+        const imgElement = document.getElementById("preview");
+
+        // Charger le modèle entraîné
+        function loadModel() {
+            nn = ml5.neuralNetwork({ task: 'classification' });
+            nn.load(
+                {
+                    model: 'model.json',
+                    metadata: 'model_meta.json',
+                    weights: 'model.weights.bin'
+                },
+                modelLoaded
+            );
+        }
+
+        function modelLoaded() {
+            console.log("✅ Modèle chargé avec succès !");
+            document.getElementById("result").innerText = "Modèle prêt. Chargez une image.";
+        }
+
+        // Déclencher l'événement lorsqu'un fichier est chargé
+        document.getElementById("fileInput").addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imgElement.src = e.target.result;
+                    imgElement.onload = function () {
+                        classifyImage(); // Une fois l'image chargée, tester la classification
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Fonction pour classifier l'image
+        function classifyImage() {
+            // Créer un canvas temporaire pour dessiner l'image
+            const canvas = document.createElement('canvas');
+            canvas.width = 224; // Largeur attendue par le modèle
+            canvas.height = 224; // Hauteur attendue par le modèle
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imgElement, 0, 0, 224, 224);
+
+            // Obtenir les données de pixels de l'image
+            const imageData = ctx.getImageData(0, 0, 224, 224);
+            const data = imageData.data;
+
+            // Convertir les données de pixels en un tableau de caractéristiques
+            const inputs = [];
+            for (let i = 0; i < data.length; i += 4) {
+                // Convertir en niveaux de gris en utilisant la moyenne des composantes R, G et B
+                const grayscale = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                // Normaliser la valeur entre 0 et 1
+                inputs.push(grayscale / 255);
+            }
+
+            // Classer l'image en utilisant le modèle
+            nn.classify({ inputs: inputs }, function (error, results) {
+                if (error) {
+                    console.error("Erreur :", error);
+                    document.getElementById("result").innerText = "Erreur lors de la classification.";
+                } else {
+                    console.log("🔍 Résultats :", results);
+                    const label = results[0].label;
+                    const confidence = (results[0].confidence * 100).toFixed(2);
+                    document.getElementById("result").innerText = `Prédiction : ${label} (Confiance : ${confidence}%)`;
+                }
+            });
+        }
+
+        // Lancer le chargement du modèle
+        loadModel();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation des Poids avec TensorFlow.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>Visualisation des Poids du Modèle MobileNet</h1>
+    <canvas id="weightsChart" width="400" height="200"></canvas>
+    <script>
+        // Charger le modèle TensorFlow.js
+        async function loadModel() {
+            const model = await tf.loadLayersModel('model.json'); // Charger le fichier model.json
+            console.log("Modèle chargé");
+
+            // Extraire les poids de la première couche (par exemple, une couche convolutive)
+            const layer = model.layers[0];  // Première couche
+            const weights = layer.getWeights()[0].dataSync();  // Récupérer les poids de la première couche
+
+            console.log("Poids de la première couche", weights);
+
+            // Visualisation avec Chart.js
+            const ctx = document.getElementById('weightsChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',  // Utilisation d'un graphique linéaire pour visualiser l'évolution des poids
+                data: {
+                    labels: Array.from({ length: weights.length }, (_, i) => i + 1),
+                    datasets: [{
+                        label: 'Poids de la Première Couche',
+                        data: Array.from(weights),  // Convertir les poids en tableau pour Chart.js
+                        fill: false,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            ticks: {
+                                stepSize: Math.floor(weights.length / 10)  // Ajuste la granularité des labels
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Charger le modèle et afficher les poids
+        loadModel();
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,11 @@
 
 
 
+### examples
+* ml5 next gen : [github](https://github.com/ml5js/ml5-next-gen)
+* ml5 fellowship 2020 : [web](https://ml5-fellowship-2020.github.io/examples/)
+* ml5 examples public : [web](./https://ml5js.github.io/ml5-examples/public/) | [github](./https://github.com/ml5js/ml5-examples/tree/release)
+
 ### liens
 * [tuto ml5](https://www.youtube.com/playlist?list=PLRqwX-V7Uu6YPSwT06y_AEYTqIwbeam3y)
 * [ml5 image classifier](https://docs.ml5js.org/#/reference/image-classifier)
