@@ -9,7 +9,7 @@ class Point {
      
      if (x > y) { label = 1;}
      else { label = -1;}
-     println("x1:"+nf(x, 3, 3)+" , x2:"+nf(y, 3, 3)+" => label:"+label);
+     //println(x+":"+y+":"+label);
    }
    
    void show() {

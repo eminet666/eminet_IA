@@ -6,18 +6,16 @@ int sign(float n) {
 
 // Perceptron
 class Perceptron {
-   float[] weights = new float[2];
+   float[] weights;
    float lr = 0.01; // learning rate
-   int guess;
-   int error;
-   float delta;
    
    // constructeur
-   Perceptron() {
+   Perceptron(int n) {
+     weights = new float[n];
      // initialisation des poids
      for(int i = 0; i < weights.length; i++){
        weights[i] = random(-1,1);
-       println("initial w"+i+" : "+weights[i]);
+       println("initial "+i+" : "+weights[i]);
      }
    }
     
@@ -31,19 +29,22 @@ class Perceptron {
    }
    
    void train(float[] inputs, int target){
-     guess = guess(inputs);
-     // int guess = guess(inputs);
-     error = target - guess; // vaut 0 si ok, -2 ou +2 sinon
-     // int error = target - guess; // vaut 0 si ok, -2 ou +2 sinon
+     int guess = guess(inputs);
+     int error = target - guess; // vaut 0 si ok, -2 ou +2 sinon
      
      // correction des poids
      for (int i = 0; i < weights.length; i++) {
-       delta = error * inputs[i] * lr;       
-       //float delta = error * inputs[i] * lr;
-       weights[i] += delta; // pas de correction si vaut 0     
-       //println(i+" : "+weights[i]+"_err,inp,lr : "+error+" , "+inputs[i]+","+lr+"_delta : "+delta); 
-       //println(i+" : "+weights[i]);        
+       weights[i] += error * inputs[i] * lr; // pas de correction si vaut 0
+       float delta = error * inputs[i] * lr;       
      }
    }
+   
+   float guessY(float x) {
+     float m = -weights[0]/weights[1];
+     float b = -weights[2]/weights[1];
+     println("y = "+m+"*x + "+b);
+     return m * x + b;
+   }
+   
    
 }

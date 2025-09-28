@@ -1,5 +1,5 @@
-// source : https://www.youtube.com/watch?v=ntKn5TPHHAk
-// à partir de 36:00 à 39:00
+// source : https://www.youtube.com/watch?v=DGxIcDjPzac&t=20s
+// à partir de 0:00 à 4:00
 Perceptron brain;
 Point[] points = new Point[100];
 int trainingIndex = 0;
@@ -18,7 +18,7 @@ void setup() {
 void draw(){
   background(255);
   stroke(0);
-  line(0,0, width, height);
+  line(0,height, width, 0);
   
   // afficher les points
   for (Point pt : points){
@@ -43,19 +43,13 @@ void draw(){
   float[] inputs = {training.x, training.y};
   int target = training.label;
   
-  if(trainingIndex == 0)
-    println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);
-    //println("A_x0,x1 : "+training.x+","+training.y+"_w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
-  
   // ajustement des poids
   brain.train(inputs, training.label); 
-  
-  //if(trainingIndex == 0)
-  //  println("B_x,y : "+training.x+","+training.y+"_wx,wy : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
   
   trainingIndex++;
   if(trainingIndex == points.length){ trainingIndex = 0;}
   
 }
 
-// lancer on voit le training converger  
+// changement de référentiel, 0,0 au centre 
+// mais détection couleur ne marche plus 

@@ -44,7 +44,7 @@ void draw(){
   int target = training.label;
   
   if(trainingIndex == 0)
-    println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);
+    println("A_x0,x1 : "+training.x+","+training.y+"_w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
     //println("A_x0,x1 : "+training.x+","+training.y+"_w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
   
   // ajustement des poids

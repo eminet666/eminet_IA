@@ -1,6 +1,7 @@
 # cours DSAA1
 
-## perceptron
+## demo perceptron
+* [1 _ ](../1_tuto_neural_network/10.2-3_perceptron_1/tuto_1_0_perceptron/)
 
 
 
@@ -14,7 +15,7 @@
 ### perceptron
 * [wikipedia](https://fr.wikipedia.org/wiki/Perceptron)
 * [original paper, frank rosenblatt](https://www.ling.upenn.edu/courses/cogs501/Rosenblatt1958.pdf)
-### daniel shiffman (processing 4, javascript p5, en)
+### daniel shiffman (processing 4, en)
 * [machine learning serie](https://www.youtube.com/watch?v=LvIa0-ZKCrc&list=PLRqwX-V7Uu6bCN8LKrcMa6zF4FPtXyXYj)
 * [neural networks serie](https://thecodingtrain.com/tracks/neural-networks/neural-networks/1-introduction)
 * [github sources files](https://github.com/nature-of-code/NOC-S17-2-Intelligence-Learning/tree/master/week4-neural-networks)

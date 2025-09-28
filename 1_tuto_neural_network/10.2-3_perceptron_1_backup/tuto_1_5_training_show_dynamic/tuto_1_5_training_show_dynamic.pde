@@ -42,17 +42,7 @@ void draw(){
   Point training = points[trainingIndex];
   float[] inputs = {training.x, training.y};
   int target = training.label;
-  
-  if(trainingIndex == 0)
-    println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);
-    //println("A_x0,x1 : "+training.x+","+training.y+"_w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
-  
-  // ajustement des poids
   brain.train(inputs, training.label); 
-  
-  //if(trainingIndex == 0)
-  //  println("B_x,y : "+training.x+","+training.y+"_wx,wy : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
-  
   trainingIndex++;
   if(trainingIndex == points.length){ trainingIndex = 0;}
   
