@@ -12,8 +12,6 @@ void setup() {
     points[i] = new Point();
   }
   
-  float[] inputs = {-1, 0.5};
-  int guess = p.guess(inputs);
 }
 
 void draw(){
