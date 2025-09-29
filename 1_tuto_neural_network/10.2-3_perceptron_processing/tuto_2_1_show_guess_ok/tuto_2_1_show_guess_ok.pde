@@ -1,5 +1,5 @@
 // source : https://www.youtube.com/watch?v=DGxIcDjPzac&t=20s
-// à partir de 6:00 à 12:00
+// à partir de 5:00 à 6:00
 Perceptron brain;
 Point[] points = new Point[100];
 int trainingIndex = 0;
@@ -18,10 +18,7 @@ void setup() {
 void draw(){
   background(255);
   stroke(0);
-  //line(0,height, width, 0);
-  Point p1 = new Point(-1, f(-1));
-  Point p2 = new Point(1, f(1));
-  line(p1.pixelX(), p1.pixelY(), p2.pixelX(), p2.pixelY());
+  line(0,height, width, 0);
   
   // afficher les points
   for (Point pt : points){
