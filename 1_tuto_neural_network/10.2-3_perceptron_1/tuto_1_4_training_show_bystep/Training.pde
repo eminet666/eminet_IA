@@ -9,7 +9,7 @@ class Point {
      
      if (x > y) { label = 1;}
      else { label = -1;}
-     println(x+":"+y+":"+label);
+     //println(x+":"+y+":"+label);
    }
    
    void show() {

@@ -33,6 +33,7 @@ class Perceptron {
    void train(float[] inputs, int target){
      guess = guess(inputs);
      // int guess = guess(inputs);
+     //println("error : "+error+", target :"+target+", guess : "+guess);
      error = target - guess; // vaut 0 si ok, -2 ou +2 sinon
      // int error = target - guess; // vaut 0 si ok, -2 ou +2 sinon
      

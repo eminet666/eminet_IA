@@ -16,6 +16,8 @@ void setup() {
 
 void draw(){
   background(255);
+  translate(0, height); // 1. Déplacer l'origine en bas à gauche
+  scale(1, -1); // 2. Inverser l'axe Y   
   stroke(0);
   line(0,0, width, height);
   

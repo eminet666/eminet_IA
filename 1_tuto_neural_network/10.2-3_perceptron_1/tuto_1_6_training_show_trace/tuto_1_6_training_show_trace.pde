@@ -17,6 +17,8 @@ void setup() {
 
 void draw(){
   background(255);
+  translate(0, height); // 1. Déplacer l'origine en bas à gauche
+  scale(1, -1); // 2. Inverser l'axe Y    
   stroke(0);
   line(0,0, width, height);
   
@@ -43,14 +45,15 @@ void draw(){
   float[] inputs = {training.x, training.y};
   int target = training.label;
   
-  if(trainingIndex == 0)
-    println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);
+  //if(trainingIndex == 0)
+    //println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);
     //println("A_x0,x1 : "+training.x+","+training.y+"_w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
   
   // ajustement des poids
   brain.train(inputs, training.label); 
   
-  //if(trainingIndex == 0)
+  if(trainingIndex == 0)
+    println("w0,w1 : "+brain.weights[0]+"_"+brain.weights[1]+"_label :"+training.label+"_output :"+brain.guess+"_error : "+brain.error+"_delta :"+brain.delta);  
   //  println("B_x,y : "+training.x+","+training.y+"_wx,wy : "+brain.weights[0]+"_"+brain.weights[1]+"_output :"+training.label);
   
   trainingIndex++;

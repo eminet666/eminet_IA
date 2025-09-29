@@ -15,6 +15,7 @@ class Perceptron {
      for(int i = 0; i < weights.length; i++){
        weights[i] = random(-1,1);
      }
+     println("w0 : "+weights[0]+", w1 : "+weights[1]+" = initialisation");
    }
     
    int guess(float[] inputs){
@@ -32,8 +33,9 @@ class Perceptron {
      
      // correction des poids
      for (int i = 0; i < weights.length; i++) {
-       weights[i] += error * inputs[i] * lr; // pas de correction si vaut 0 
+       weights[i] += error * inputs[i] * lr; // pas de correction si vaut 0
      }
+     println("w0 : "+weights[0]+", w1 : "+weights[1]);
    }
    
 }
