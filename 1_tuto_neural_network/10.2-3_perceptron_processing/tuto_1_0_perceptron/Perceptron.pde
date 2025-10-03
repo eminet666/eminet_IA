@@ -14,11 +14,11 @@ class Perceptron {
      for(int i = 0; i < weights.length; i++){
        weights[i] = random(-1,1);
      }
-     println("poids : "+weights[0]+", "+weights[1]);
+     println("poids initiaux : "+weights[0]+", "+weights[1]);
    }
     
    int guess(float[] inputs){
-     println("inputs : "+inputs[0]+", "+inputs[1]);
+     println("exemple inputs : "+inputs[0]+", "+inputs[1]);
      float sum = 0;
      for(int i = 0; i < weights.length; i++){
        sum += inputs[i]*weights[i];

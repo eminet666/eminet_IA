@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perceptron - Classification Linéaire</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="./perceptrom.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+            font-family: Arial, sans-serif;
+        }
+    
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 500px;
+        }
+    
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+    
+        #canvas-container {
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+    
+        .instructions {
+            background-color: #dbeafe;
+            padding: 15px;
+            border-radius: 4px;
+        }
+    
+        .instructions h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #1e40af;
+        }
+    
+        .instructions ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+    
+        .instructions li {
+            margin: 8px 0;
+            color: #1f2937;
+            font-size: 14px;
+        }
+    
+        strong {
+            color: #1e40af;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Perceptron - Classification Linéaire</h1>
+        <div id="canvas-container"></div>
+        <div class="instructions">
+            <h2>Instructions :</h2>
+            <ul>
+                <li><strong>Ligne noire</strong> : ligne de référence (y = -0.3x + 0.4)</li>
+                <li><strong>Ligne verte</strong> : ligne de décision du perceptron</li>
+                <li><strong>Points blancs/noirs</strong> : données d'entraînement</li>
+                <li><strong>Disques verts/rouges</strong> : prédictions (vert = correct, rouge = erreur)</li>
+                <li><strong>Touche 'T'</strong> : tester sur un nouveau jeu de données (points bleus)</li>
+                <li>Ouvrez la console pour voir les détails de l'entraînement</li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>
