@@ -40,7 +40,7 @@ function draw(){
     // STEP 1 VISUALISATION 
     nn.setLearningRate(lr_slider.value());
 
-    let resolution = 10;
+    let resolution = 20;
     let cols = width / resolution;
     let rows = height / resolution;
     for (let i = 0; i < cols; i++) {

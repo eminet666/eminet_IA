@@ -12,11 +12,12 @@ function pickColor(){
 function colorPredictor(r, g, b){
     let inputs = [r/255, g/255, b/255];
     let outputs = brain.predict(inputs);
-    console.log(outputs);
 
     if(outputs[0] > outputs[1]) {
+      console.log(outputs[0].toFixed(2)+ " > "+outputs[1].toFixed(2)+ " => guess = black");
       return "black";
     } else {
+      console.log(outputs[0].toFixed(2)+ " < "+outputs[1].toFixed(2)+ " => guess = white");
       return "white";
     }
 

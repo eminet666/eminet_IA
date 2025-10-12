@@ -10,14 +10,14 @@ function pickColor(){
 
 function colorPredictor(r, g, b){
   let sum = r + g + b;
-  console.log(sum);
   if(sum > 300){
+    console.log("rgb sum = "+sum.toFixed(0)+" => guess = black");
     return "black";
   } else {
+    console.log("rgb sum = "+sum.toFixed(0)+" => guess = white");
     return "white";
   }
 }
-
 
 function setup(){
     createCanvas(600, 300);
@@ -26,6 +26,9 @@ function setup(){
 
 function draw(){
     background(r,g,b);
+    strokeWeight(4);
+    stroke(0);
+    line(width/2, 0, width/2, height);    
 
     textSize(64);
     noStroke();

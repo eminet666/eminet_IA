@@ -66,7 +66,6 @@ class Matrix {
 
   static multiply(a, b) {
     // Matrix product
-    // console.log("a_cols:"+a.cols, "b_rows"+b.rows);
     if (a.cols !== b.rows) {
       console.log('Columns of A must match rows of B.');
       return;
@@ -116,16 +115,7 @@ class Matrix {
   }
 
   print() {
-    // Crée une copie formatée des données pour afficher 2 digits après la virgule
-    let formattedData = [];
-    for (let i = 0; i < this.rows; i++) {
-        formattedData[i] = [];
-        for (let j = 0; j < this.cols; j++) {
-            formattedData[i][j] = parseFloat(this.data[i][j].toFixed(2));
-        }
-    }
-    console.table(formattedData);
-    //console.table(this.data);
+    console.table(this.data);
     return this;
   }
 

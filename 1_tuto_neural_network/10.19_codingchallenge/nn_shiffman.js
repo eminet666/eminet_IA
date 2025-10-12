@@ -54,6 +54,8 @@ class NeuralNetwork {
     // TODO: copy these as well
     this.setLearningRate();
     this.setActivationFunction();
+
+
   }
 
   predict(input_array) {

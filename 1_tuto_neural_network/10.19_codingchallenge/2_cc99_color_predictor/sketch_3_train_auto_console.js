@@ -10,10 +10,10 @@ function pickColor(){
 //let which = "black";
 
 function colorPredictor(r, g, b){
-    console.log(r+g+b);
     let inputs = [r/255, g/255, b/255];
     let outputs = brain.predict(inputs);
-    // console.log(outputs);
+    let sum = r + g + b;
+    console.log("r+g+b = "+sum.toFixed(0)+ ", output: "+outputs[0].toFixed(2)+', '+outputs[1].toFixed(2));
 
     if(outputs[0] > outputs[1]) {
       return "black";
@@ -25,9 +25,9 @@ function colorPredictor(r, g, b){
 
 function trainColor(r,g,b) {
   if (r + g + b > 300){
-    return [0,1];
-  } else {
     return [1,0];
+  } else {
+    return [0,1];
   }
 }
 
@@ -44,6 +44,7 @@ function setup(){
       let inputs = [r/255, g/255, b/255];
       brain.train(inputs, targets);
     }
+    console.log("training done");
     
     pickColor();
 }
@@ -76,7 +77,7 @@ function draw(){
 }
 
 function mousePressed(){
-  pickColors();
+  pickColor();
 }
 
 
