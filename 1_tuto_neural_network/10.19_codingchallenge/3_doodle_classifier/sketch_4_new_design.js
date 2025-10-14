@@ -85,5 +85,12 @@ function setup(){
         background(255);
     });
 
+}
 
+function draw() {
+  strokeWeight(8);
+  stroke(0);
+  if(mouseIsPressed){
+      line(pmouseX, pmouseY, mouseX, mouseY); //pmouse = previous position
+  }
 }

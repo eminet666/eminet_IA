@@ -21,7 +21,7 @@ function testAll(testing) {
   for (let i = 0; i < testing.length; i++) {
     // for (let i = 0; i < 1; i++) {
     let data = testing[i];
-    let inputs = Array.from(data).map(x => x / 255);
+    let inputs = Array.from(data).map(x => x / 255); // rajoute Array.from pour s'assurer que data est bien un array, fonction map pour normaliser
     let label = testing[i].label;
     let guess = nn.predict(inputs);
 
@@ -40,10 +40,3 @@ function testAll(testing) {
 
 }
 
-function draw() {
-  strokeWeight(8);
-  stroke(0);
-  if(mouseIsPressed){
-      line(pmouseX, pmouseY, mouseX, mouseY); //pmouse = previous position
-  }
-}
