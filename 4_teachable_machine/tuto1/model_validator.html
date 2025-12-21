@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validateur de modèle</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .file-label:hover {
+            background: #5568d3;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #653a8a;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        .stat-item {
+            margin: 10px 0;
+            font-size: 18px;
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #667eea;
+        }
+        .accuracy {
+            font-size: 36px;
+            text-align: center;
+            margin: 20px 0;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        #status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>🐱🐶 Validateur de Modèle</h1>
+        
+        <div class="input-group">
+            <label for="modelUrl">URL du modèle Teachable Machine :</label>
+            <input type="text" id="modelUrl" value="https://teachablemachine.withgoogle.com/models/3f6NL2TAd/">
+        </div>
+        
+        <div class="input-group">
+            <label class="file-label" for="fileInput">
+                📁 Sélectionner le dossier contenant cats/ et dogs/
+            </label>
+            <input type="file" id="fileInput" multiple accept="image/*" webkitdirectory directory>
+        </div>
+        
+        <button id="startBtn" disabled>Démarrer la validation</button>
+        
+        <div id="status"></div>
+        
+        <div id="stats">
+            <div class="accuracy" id="accuracy">0%</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress">0%</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Images testées :</span>
+                <span id="tested">0</span> / <span id="total">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Correctes :</span>
+                <span id="correct">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Incorrectes :</span>
+                <span id="incorrect">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let classifier;
+        let allFiles = [];
+        let currentIndex = 0;
+        let correct = 0;
+        let incorrect = 0;
+        let isValidating = false;
+
+        const modelUrlInput = document.getElementById('modelUrl');
+        const fileInput = document.getElementById('fileInput');
+        const startBtn = document.getElementById('startBtn');
+        const statusDiv = document.getElementById('status');
+        const statsDiv = document.getElementById('stats');
+        const maxImages = 500; // Valeur fixe
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = type;
+            statusDiv.style.display = 'block';
+        }
+
+        function updateStats() {
+            const total = correct + incorrect;
+            const accuracy = total > 0 ? ((correct / total) * 100).toFixed(2) : 0;
+            const progress = allFiles.length > 0 ? ((total / allFiles.length) * 100).toFixed(1) : 0;
+            
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('tested').textContent = total;
+            document.getElementById('total').textContent = allFiles.length;
+            document.getElementById('correct').textContent = correct;
+            document.getElementById('incorrect').textContent = incorrect;
+            document.getElementById('progress').style.width = progress + '%';
+            document.getElementById('progress').textContent = progress + '%';
+            statsDiv.style.display = 'block';
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+            
+            // Séparer les images par classe
+            const catsImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/cats/') || path.includes('\\cats\\');
+            });
+            
+            const dogsImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/dogs/') || path.includes('\\dogs\\');
+            });
+            
+            // Prendre les 500 premières images de chaque classe
+            const selectedCats = catsImages.slice(0, maxImages);
+            const selectedDogs = dogsImages.slice(0, maxImages);
+            
+            allFiles = [...selectedCats, ...selectedDogs];
+            
+            console.log(`Images cats sélectionnées : ${selectedCats.length}`);
+            console.log(`Images dogs sélectionnées : ${selectedDogs.length}`);
+            console.log(`Total : ${allFiles.length} images`);
+            
+            if (allFiles.length > 0) {
+                showStatus(`${selectedCats.length} cats + ${selectedDogs.length} dogs = ${allFiles.length} images sélectionnées`, 'success');
+                if (modelUrlInput.value.trim()) {
+                    startBtn.disabled = false;
+                }
+            } else {
+                showStatus('Aucune image valide trouvée dans cats/ ou dogs/', 'error');
+            }
+        });
+
+        modelUrlInput.addEventListener('input', () => {
+            if (modelUrlInput.value.trim() && allFiles.length > 0) {
+                startBtn.disabled = false;
+            } else {
+                startBtn.disabled = true;
+            }
+        });
+
+        // Activer le bouton de démarrage si l'URL par défaut est présente
+        if (modelUrlInput.value.trim()) {
+            startBtn.disabled = allFiles.length === 0;
+        }
+
+        startBtn.addEventListener('click', async () => {
+            if (isValidating) return;
+            
+            isValidating = true;
+            startBtn.disabled = true;
+            correct = 0;
+            incorrect = 0;
+            currentIndex = 0;
+            
+            showStatus('Chargement du modèle...', 'info');
+            
+            try {
+                const modelURL = modelUrlInput.value.trim() + 'model.json';
+                classifier = await ml5.imageClassifier(modelURL);
+                showStatus('Modèle chargé ! Validation en cours...', 'success');
+                updateStats();
+                
+                processNextImage();
+            } catch (error) {
+                showStatus('Erreur lors du chargement du modèle', 'error');
+                console.error(error);
+                isValidating = false;
+                startBtn.disabled = false;
+            }
+        });
+
+        async function processNextImage() {
+            if (currentIndex >= allFiles.length) {
+                showStatus('Validation terminée !', 'success');
+                isValidating = false;
+                startBtn.disabled = false;
+                return;
+            }
+
+            const file = allFiles[currentIndex];
+            await processImage(file);
+            currentIndex++;
+            
+            // Continuer avec l'image suivante
+            processNextImage();
+        }
+
+        async function processImage(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                
+                img.onload = () => {
+                    const path = file.webkitRelativePath || file.name;
+                    const trueLabel = path.includes('/cats/') || path.includes('\\cats\\') ? 'cat' : 
+                                    path.includes('/dogs/') || path.includes('\\dogs\\') ? 'dog' : 'unknown';
+                    
+                    classifier.classify(img, (error, results) => {
+                        URL.revokeObjectURL(url);
+                        
+                        if (error) {
+                            console.error('Erreur de classification:', error);
+                            resolve();
+                            return;
+                        }
+                        
+                        const prediction = results[0];
+                        const predictedLabel = prediction.label.toLowerCase();
+                        const confidence = (prediction.confidence * 100).toFixed(2);
+                        
+                        console.log(`Image: ${file.name}`);
+                        console.log(`Label réel: ${trueLabel}`);
+                        console.log(`Prédiction: ${predictedLabel} (${confidence}%)`);
+                        console.log('---');
+                        
+                        if (predictedLabel === trueLabel) {
+                            correct++;
+                        } else {
+                            incorrect++;
+                        }
+                        
+                        updateStats();
+                        resolve();
+                    });
+                };
+                
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    console.error('Erreur de chargement:', file.name);
+                    resolve();
+                };
+                
+                img.src = url;
+            });
+        }
+
+        function setup() {
+            noCanvas();
+        }
+    </script>
+</body>
+</html>

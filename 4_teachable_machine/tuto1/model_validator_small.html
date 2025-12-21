@@ -1,0 +1,298 @@
+!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validateur de modèle</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .accuracy {
+            font-size: 72px;
+            margin: 30px 0;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .stat-box {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .file-label:hover {
+            background: #5568d3;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Validation du modèle</h1>
+        
+        <label class="file-label" for="fileInput">
+            Charger le dataset
+        </label>
+        <input type="file" id="fileInput" multiple accept="image/*" webkitdirectory directory>
+        
+        <div id="status" class="hidden"></div>
+        
+        <div id="results" class="hidden">
+            <div class="accuracy" id="accuracy">0%</div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="tested">0</div>
+                    <div class="stat-label">Images testées</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="total">0</div>
+                    <div class="stat-label">Total</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="correct" style="color: #28a745;">0</div>
+                    <div class="stat-label">Correctes</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="incorrect" style="color: #dc3545;">0</div>
+                    <div class="stat-label">Incorrectes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONFIGURATION - Modifiez ces valeurs
+        // ========================================
+        const MODEL_URL = 'https://teachablemachine.withgoogle.com/models/3f6NL2TAd/';
+        // ========================================
+
+        let classifier;
+        let allFiles = [];
+        let currentIndex = 0;
+        let correct = 0;
+        let incorrect = 0;
+        let isValidating = false;
+
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = type;
+            statusDiv.classList.remove('hidden');
+        }
+
+        function updateStats() {
+            const total = correct + incorrect;
+            const accuracy = total > 0 ? ((correct / total) * 100).toFixed(2) : 0;
+            
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            document.getElementById('tested').textContent = total;
+            document.getElementById('total').textContent = allFiles.length;
+            document.getElementById('correct').textContent = correct;
+            document.getElementById('incorrect').textContent = incorrect;
+            
+            resultsDiv.classList.remove('hidden');
+        }
+
+        fileInput.addEventListener('change', async (e) => {
+            if (isValidating) return;
+            
+            const files = Array.from(e.target.files);
+            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+            
+            // Séparer les images par classe
+            const catsImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/cats/') || path.includes('\\cats\\');
+            });
+            
+            const dogsImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/dogs/') || path.includes('\\dogs\\');
+            });
+            
+            // Prendre toutes les images de chaque classe
+            allFiles = [...catsImages, ...dogsImages];
+            
+            console.log(`Images cats: ${catsImages.length}`);
+            console.log(`Images dogs: ${dogsImages.length}`);
+            console.log(`Total: ${allFiles.length}`);
+            
+            if (allFiles.length === 0) {
+                showStatus('Aucune image trouvée', 'error');
+                return;
+            }
+            
+            // Démarrer automatiquement la validation
+            startValidation();
+        });
+
+        async function startValidation() {
+            isValidating = true;
+            correct = 0;
+            incorrect = 0;
+            currentIndex = 0;
+            
+            showStatus('Chargement du modèle...', 'info');
+            
+            try {
+                const modelURL = MODEL_URL + 'model.json';
+                classifier = await ml5.imageClassifier(modelURL);
+                showStatus('Validation en cours...', 'success');
+                updateStats();
+                
+                processNextImage();
+            } catch (error) {
+                showStatus('Erreur de chargement du modèle', 'error');
+                console.error(error);
+                isValidating = false;
+            }
+        }
+
+        async function processNextImage() {
+            if (currentIndex >= allFiles.length) {
+                showStatus('Validation terminée !', 'success');
+                isValidating = false;
+                return;
+            }
+
+            const file = allFiles[currentIndex];
+            await processImage(file);
+            currentIndex++;
+            
+            processNextImage();
+        }
+
+        async function processImage(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                
+                img.onload = () => {
+                    const path = file.webkitRelativePath || file.name;
+                    const trueLabel = path.includes('/cats/') || path.includes('\\cats\\') ? 'cat' : 
+                                    path.includes('/dogs/') || path.includes('\\dogs\\') ? 'dog' : 'unknown';
+                    
+                    classifier.classify(img, (error, results) => {
+                        URL.revokeObjectURL(url);
+                        
+                        if (error) {
+                            console.error('Erreur de classification:', error);
+                            resolve();
+                            return;
+                        }
+                        
+                        const prediction = results[0];
+                        const predictedLabel = prediction.label.toLowerCase();
+                        const confidence = (prediction.confidence * 100).toFixed(2);
+                        
+                        console.log(`Image: ${file.name}`);
+                        console.log(`Label réel: ${trueLabel}`);
+                        console.log(`Prédiction: ${predictedLabel} (${confidence}%)`);
+                        console.log('---');
+                        
+                        if (predictedLabel === trueLabel) {
+                            correct++;
+                        } else {
+                            incorrect++;
+                        }
+                        
+                        updateStats();
+                        resolve();
+                    });
+                };
+                
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    console.error('Erreur de chargement:', file.name);
+                    resolve();
+                };
+                
+                img.src = url;
+            });
+        }
+
+        function setup() {
+            noCanvas();
+        }
+    </script>
+</body>
+</html>

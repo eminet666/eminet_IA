@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validateur de modèle</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ouvrir la console (F12)</h1>
+    <input type="file" id="fileInput" multiple accept="image/*" webkitdirectory directory style="display:block; margin:20px auto;">
+
+    <script>
+        // ========================================
+        // CONFIGURATION
+        // ========================================
+        const MODEL_URL = 'https://teachablemachine.withgoogle.com/models/_unj4TTFj/';
+        // ========================================
+
+        let classifier;
+        let allFiles = [];
+        let currentIndex = 0;
+        let correct = 0;
+        let incorrect = 0;
+
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            const imageFiles = files.filter(f => f.type.startsWith('image/'));
+            
+            const targetImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/target/') || path.includes('\\target\\');
+            });
+            
+            const othersImages = imageFiles.filter(f => {
+                const path = f.webkitRelativePath || f.name;
+                return path.includes('/others/') || path.includes('\\others\\');
+            });
+            
+            allFiles = [...targetImages, ...othersImages];
+            
+            console.log('='.repeat(50));
+            console.log(`CHARGEMENT DES IMAGES`);
+            console.log(`target: ${targetImages.length} | others: ${othersImages.length} | Total: ${allFiles.length}`);
+            console.log('='.repeat(50));
+            
+            if (allFiles.length === 0) {
+                console.error('Aucune image trouvée');
+                return;
+            }
+            
+            // Charger le modèle et démarrer
+            console.log('Chargement du modèle...');
+            classifier = await ml5.imageClassifier(MODEL_URL + 'model.json');
+            console.log('Modèle chargé ✓');
+            console.log('Début de la validation...\n');
+            
+            processNextImage();
+        });
+
+        async function processNextImage() {
+            if (currentIndex >= allFiles.length) {
+                const total = correct + incorrect;
+                const accuracy = ((correct / total) * 100).toFixed(2);
+                
+                console.log('\n' + '='.repeat(50));
+                console.log('RÉSULTATS FINAUX');
+                console.log('='.repeat(50));
+                console.log(`Accuracy: ${accuracy}%`);
+                console.log(`Images testées: ${total}`);
+                console.log(`Correctes: ${correct}`);
+                console.log(`Incorrectes: ${incorrect}`);
+                console.log('='.repeat(50));
+                return;
+            }
+
+            const file = allFiles[currentIndex];
+            await processImage(file);
+            currentIndex++;
+            processNextImage();
+        }
+
+        async function processImage(file) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                
+                img.onload = () => {
+                    const path = file.webkitRelativePath || file.name;
+                    const trueLabel = path.includes('/target/') || path.includes('\\target\\') ? 'target' : 
+                                    path.includes('/others/') || path.includes('\\others\\') ? 'others' : 'unknown';
+                    
+                    classifier.classify(img, (error, results) => {
+                        URL.revokeObjectURL(url);
+                        
+                        if (error) {
+                            console.error('Erreur:', error);
+                            resolve();
+                            return;
+                        }
+                        
+                        const prediction = results[0];
+                        const predictedLabel = prediction.label.toLowerCase();
+                        const confidence = (prediction.confidence * 100).toFixed(2);
+                        const isCorrect = predictedLabel === trueLabel;
+                        
+                        if (isCorrect) {
+                            correct++;
+                        } else {
+                            incorrect++;
+                        }
+                        
+                        const total = correct + incorrect;
+                        const accuracy = ((correct / total) * 100).toFixed(2);
+                        
+                        console.log(`[${total}/${allFiles.length}] ${file.name} | Vrai: ${trueLabel} | Prédit: ${predictedLabel} (${confidence}%) | ${isCorrect ? '✓' : '✗'} | Accuracy: ${accuracy}%`);
+                        
+                        resolve();
+                    });
+                };
+                
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    console.error('Erreur de chargement:', file.name);
+                    resolve();
+                };
+                
+                img.src = url;
+            });
+        }
+
+        function setup() {
+            noCanvas();
+        }
+    </script>
+</body>
+</html>
