@@ -10,6 +10,7 @@
 | [ready](https://github.com/Walid-Ahmed/imageclassifierSuite)
 * youtube : [tuto1](https://www.youtube.com/watch?v=kwcillcWOg0)
 * tuto1 : [sources](https://thecodingtrain.com/tracks/teachable-machine/teachable-machine/1-image-classification)
+* tuto2 : [snake game](https://github.com/CodingTrain/website-archive/tree/main/CodingChallenges/CC_003_Snake_game/P5)
 
 
 
