@@ -24,7 +24,7 @@ function setup(){
     for (let i = 0; i < 30; i++){
         values[i] = random(0,100);
     }
-    const shape = [2,5,3];
+    const shape = [2,5,3]; // 2 blocks, 5 rows, 3 columns
     const data2 = tf.tensor(values, shape, 'int32');
     data2.print();
 
