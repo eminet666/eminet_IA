@@ -1,0 +1,90 @@
+{
+    "data": {
+        "inputMin": [
+            30,
+            18
+        ],
+        "inputMax": [
+            937,
+            289
+        ],
+        "outputMin": 0,
+        "outputMax": 1
+    },
+    "meta": {
+        "inputUnits": 2,
+        "outputUnits": 6,
+        "inputs": {
+            "x": {
+                "dtype": "number"
+            },
+            "y": {
+                "dtype": "number"
+            }
+        },
+        "outputs": {
+            "label": {
+                "dtype": "string",
+                "uniqueValues": [
+                    "C",
+                    "D",
+                    "E",
+                    "F",
+                    "G",
+                    "H"
+                ],
+                "legend": {
+                    "C": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "D": [
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "E": [
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0
+                    ],
+                    "F": [
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0
+                    ],
+                    "G": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0
+                    ],
+                    "H": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                }
+            }
+        },
+        "isNormalized": true
+    }
+}

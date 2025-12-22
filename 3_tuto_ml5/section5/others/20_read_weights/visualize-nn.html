@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisateur de Réseau de Neurones</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        #canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+            background: #fafafa;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        input[type="file"]:hover {
+            background: #5568d3;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .stats {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧠 Visualisateur de Réseau de Neurones</h1>
+        <p class="info">Chargez votre fichier model.json pour visualiser l'architecture de votre réseau</p>
+
+        <div class="controls">
+            <input type="file" id="fileInput" accept=".json">
+        </div>
+
+        <canvas id="canvas" width="1000" height="600"></canvas>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #4CAF50;"></div>
+                <span>Couche d'entrée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #2196F3;"></div>
+                <span>Couche cachée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #FF9800;"></div>
+                <span>Couche de sortie</span>
+            </div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="totalLayers">0</div>
+                <div class="stat-label">Couches totales</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalNeurons">0</div>
+                <div class="stat-label">Neurones totaux</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalParams">0</div>
+                <div class="stat-label">Paramètres totaux</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    try {
+                        const modelJson = JSON.parse(event.target.result);
+                        visualizeNetwork(modelJson);
+                    } catch (error) {
+                        alert('Erreur lors de la lecture du fichier: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function visualizeNetwork(modelJson) {
+            // Extraire les couches
+            let layers = null;
+            if (modelJson.modelTopology?.config && Array.isArray(modelJson.modelTopology.config)) {
+                layers = modelJson.modelTopology.config;
+            } else if (modelJson.modelTopology?.model_config?.config?.layers) {
+                layers = modelJson.modelTopology.model_config.config.layers;
+            }
+
+            if (!layers) {
+                alert('Structure du modèle non reconnue');
+                return;
+            }
+
+            // Analyser les couches
+            const networkLayers = [];
+            let totalParams = 0;
+
+            layers.forEach((layer, index) => {
+                const config = layer.config;
+                const type = layer.class_name;
+
+                // Pour la première couche avec batch_input_shape
+                if (index === 0 && config.batch_input_shape) {
+                    const inputSize = config.batch_input_shape[config.batch_input_shape.length - 1];
+                    networkLayers.push({
+                        name: 'Input',
+                        neurons: inputSize,
+                        type: 'input',
+                        activation: 'none'
+                    });
+                }
+
+                // Ajouter la couche actuelle
+                if (type === 'Dense' || type === 'LSTM' || type === 'GRU') {
+                    const isOutput = index === layers.length - 1;
+                    networkLayers.push({
+                        name: config.name || `Layer ${index + 1}`,
+                        neurons: config.units,
+                        type: isOutput ? 'output' : 'hidden',
+                        activation: config.activation || 'none'
+                    });
+                }
+            });
+
+            // Calculer les paramètres
+            if (modelJson.weightsManifest) {
+                modelJson.weightsManifest.forEach(manifest => {
+                    manifest.weights.forEach(weight => {
+                        const numElements = weight.shape.reduce((a, b) => a * b, 1);
+                        totalParams += numElements;
+                    });
+                });
+            }
+
+            // Dessiner le réseau
+            drawNetwork(networkLayers, totalParams);
+        }
+
+        function drawNetwork(layers, totalParams) {
+            // Effacer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 80;
+            const layerSpacing = (canvas.width - 2 * padding) / (layers.length - 1);
+            const maxNeurons = Math.max(...layers.map(l => l.neurons));
+            const neuronRadius = Math.min(20, (canvas.height - 2 * padding) / (maxNeurons * 3));
+
+            const colors = {
+                input: '#4CAF50',
+                hidden: '#2196F3',
+                output: '#FF9800'
+            };
+
+            // Dessiner les connexions d'abord
+            for (let i = 0; i < layers.length - 1; i++) {
+                const currentLayer = layers[i];
+                const nextLayer = layers[i + 1];
+
+                const x1 = padding + i * layerSpacing;
+                const x2 = padding + (i + 1) * layerSpacing;
+
+                for (let j = 0; j < currentLayer.neurons; j++) {
+                    const y1 = getYPosition(j, currentLayer.neurons, canvas.height, neuronRadius);
+
+                    for (let k = 0; k < nextLayer.neurons; k++) {
+                        const y2 = getYPosition(k, nextLayer.neurons, canvas.height, neuronRadius);
+
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Dessiner les neurones
+            layers.forEach((layer, layerIndex) => {
+                const x = padding + layerIndex * layerSpacing;
+                const color = colors[layer.type];
+
+                for (let i = 0; i < layer.neurons; i++) {
+                    const y = getYPosition(i, layer.neurons, canvas.height, neuronRadius);
+
+                    // Cercle du neurone
+                    ctx.beginPath();
+                    ctx.arc(x, y, neuronRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Étiquette de la couche
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.name, x, canvas.height - 30);
+
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#666';
+                ctx.fillText(`${layer.neurons} neurones`, x, canvas.height - 15);
+                ctx.fillText(`(${layer.activation})`, x, canvas.height - 0);
+            });
+
+            // Afficher les statistiques
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('totalLayers').textContent = layers.length;
+            document.getElementById('totalNeurons').textContent = layers.reduce((sum, l) => sum + l.neurons, 0);
+            document.getElementById('totalParams').textContent = totalParams.toLocaleString();
+        }
+
+        function getYPosition(neuronIndex, totalNeurons, canvasHeight, neuronRadius) {
+            const availableHeight = canvasHeight - 120; // Espace pour les labels
+            const spacing = availableHeight / (totalNeurons + 1);
+            return 60 + spacing * (neuronIndex + 1);
+        }
+
+        // Message initial
+        ctx.fillStyle = '#999';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chargez un fichier model.json pour commencer', canvas.width / 2, canvas.height / 2);
+    </script>
+</body>
+
+</html>

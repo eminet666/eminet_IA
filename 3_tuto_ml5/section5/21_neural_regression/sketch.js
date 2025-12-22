@@ -11,10 +11,54 @@ function setup() {
   let options = {
     inputs: ['x', 'y'],         //  input features
     outputs: ['label'],         // output labels
-    task: 'classification',     // type of model
+    task: 'regression',     // type of model
+    learningRate: 0.5,          // learning rate
     debug : true                // show a graph of loss during training
   };
   model = ml5.neuralNetwork(options); // create the model
+  // model.loadData('mouse-data.json', dataLoaded); // load the data from file
+  const modelInfo = {
+    model: 'model/model.json',
+    metadata: 'model/model_meta.json',
+    weights: 'model/model.weights.bin'
+  }
+  model.load(modelInfo, modelLoaded); // load the model from files
+}
+
+
+function modelLoaded() {
+    console.log('model loaded');
+    state = 'prediction';
+}
+
+// when data is loaded
+function dataLoaded() {
+    console.log('data loaded');
+    console.log(model.data);
+    let data = model.data.data.raw;
+    // let data = model.getData(); // alternative way to get the data
+    for (let i = 0; i < data.length; i++) {
+        let inputs = data[i].xs;
+        let target = data[i].ys;
+
+        // visualize the point
+        stroke(0);
+        noFill();
+        ellipse(inputs.x, inputs.y, 24);  
+        fill(0);
+        noStroke();
+        textAlign(CENTER, CENTER);  
+        text(target.label, inputs.x, inputs.y);
+    } 
+    
+    // call training automatically after loading data
+        state = 'training';
+        console.log('starting training');
+        model.normalizeData(); // normalize the data before training        
+        let options = {
+            epochs: 200
+        };
+        model.train(options, whileTraining, finishedTraining); // train the model
 }
 
 // STEP 1: add data
@@ -28,6 +72,10 @@ function keyPressed() {
             epochs: 200
         };
         model.train(options, whileTraining, finishedTraining); // train the model
+    } else if (key == 's') { // save data
+        model.saveData('mouse-data');   // save the data (function .saveData())
+    } else if (key == 'm') { // save model
+        model.save();      // save the model (function .save())
     } else { // change target label
         targetLabel = key.toUpperCase();
     }

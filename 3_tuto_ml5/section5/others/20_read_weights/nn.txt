@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════
+        ARCHITECTURE DU RÉSEAU DE NEURONES
+═══════════════════════════════════════════════════════
+
+Format: Non spécifié
+Version TensorFlow.js: Non spécifié
+Convertie depuis: Non spécifié
+───────────────────────────────────────────────────────
+                    COUCHES DU RÉSEAU
+───────────────────────────────────────────────────────
+
+
+───────────────────────────────────────────────────────
+                  INFORMATIONS SUR LES POIDS
+───────────────────────────────────────────────────────
+
+dense_Dense1/kernel:
+  Shape: [2, 16]
+  Type: float32
+  Paramètres: 32
+
+dense_Dense1/bias:
+  Shape: [16]
+  Type: float32
+  Paramètres: 16
+
+dense_Dense2/kernel:
+  Shape: [16, 6]
+  Type: float32
+  Paramètres: 96
+
+dense_Dense2/bias:
+  Shape: [6]
+  Type: float32
+  Paramètres: 6
+
+Nombre total de paramètres: 150

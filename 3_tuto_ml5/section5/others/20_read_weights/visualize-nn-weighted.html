@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisateur de Réseau de Neurones avec Poids</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .file-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .file-label:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .file-label.loaded {
+            background: #4CAF50;
+        }
+
+        #canvas {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+            background: #fafafa;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        .weight-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .weight-gradient {
+            width: 300px;
+            height: 20px;
+            border-radius: 10px;
+            background: linear-gradient(to right, #2196F3, #E3F2FD, #FFEB3B, #FF5722);
+            border: 1px solid #ddd;
+        }
+
+        .weight-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .stats {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🧠 Visualisateur de Réseau de Neurones avec Poids</h1>
+        <p class="info">Chargez vos fichiers model.json et model.weights.bin pour voir le réseau avec les poids colorés
+        </p>
+
+        <div class="file-inputs">
+            <input type="file" id="jsonInput" accept=".json">
+            <label for="jsonInput" class="file-label" id="jsonLabel">📄 Choisir model.json</label>
+
+            <input type="file" id="binInput" accept=".bin">
+            <label for="binInput" class="file-label" id="binLabel">📦 Choisir model.weights.bin</label>
+        </div>
+
+        <canvas id="canvas" width="1200" height="700"></canvas>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="lineWidth">Épaisseur des liens:</label>
+                <input type="range" id="lineWidth" min="0.5" max="5" step="0.5" value="2">
+                <span id="lineWidthValue">2</span>
+            </div>
+            <div class="control-group">
+                <label for="opacity">Opacité:</label>
+                <input type="range" id="opacity" min="0.1" max="1" step="0.1" value="0.6">
+                <span id="opacityValue">0.6</span>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #4CAF50;"></div>
+                <span>Couche d'entrée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #2196F3;"></div>
+                <span>Couche cachée</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-circle" style="background: #FF9800;"></div>
+                <span>Couche de sortie</span>
+            </div>
+        </div>
+
+        <div class="weight-legend">
+            <span class="weight-label">Poids faibles (négatifs)</span>
+            <div class="weight-gradient"></div>
+            <span class="weight-label">Poids forts (positifs)</span>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-value" id="totalLayers">0</div>
+                <div class="stat-label">Couches totales</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalNeurons">0</div>
+                <div class="stat-label">Neurones totaux</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalParams">0</div>
+                <div class="stat-label">Paramètres totaux</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="minWeight">0</div>
+                <div class="stat-label">Poids minimum</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="maxWeight">0</div>
+                <div class="stat-label">Poids maximum</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let modelJson = null;
+        let weightsData = null;
+        let currentNetwork = null;
+
+        let lineWidth = 2;
+        let opacity = 0.6;
+
+        document.getElementById('jsonInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    try {
+                        modelJson = JSON.parse(event.target.result);
+                        document.getElementById('jsonLabel').classList.add('loaded');
+                        document.getElementById('jsonLabel').textContent = '✓ model.json chargé';
+                        checkAndVisualize();
+                    } catch (error) {
+                        alert('Erreur lors de la lecture du fichier: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('binInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    weightsData = new Float32Array(event.target.result);
+                    document.getElementById('binLabel').classList.add('loaded');
+                    document.getElementById('binLabel').textContent = '✓ model.weights.bin chargé';
+                    checkAndVisualize();
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        document.getElementById('lineWidth').addEventListener('input', function (e) {
+            lineWidth = parseFloat(e.target.value);
+            document.getElementById('lineWidthValue').textContent = lineWidth;
+            if (currentNetwork) {
+                drawNetwork(currentNetwork);
+            }
+        });
+
+        document.getElementById('opacity').addEventListener('input', function (e) {
+            opacity = parseFloat(e.target.value);
+            document.getElementById('opacityValue').textContent = opacity;
+            if (currentNetwork) {
+                drawNetwork(currentNetwork);
+            }
+        });
+
+        function checkAndVisualize() {
+            if (modelJson && weightsData) {
+                visualizeNetwork();
+            }
+        }
+
+        function visualizeNetwork() {
+            // Extraire les couches
+            let layers = null;
+            if (modelJson.modelTopology?.config && Array.isArray(modelJson.modelTopology.config)) {
+                layers = modelJson.modelTopology.config;
+            } else if (modelJson.modelTopology?.model_config?.config?.layers) {
+                layers = modelJson.modelTopology.model_config.config.layers;
+            }
+
+            if (!layers) {
+                alert('Structure du modèle non reconnue');
+                return;
+            }
+
+            // Analyser les couches
+            const networkLayers = [];
+            let offset = 0;
+            const weightMatrices = [];
+
+            layers.forEach((layer, index) => {
+                const config = layer.config;
+                const type = layer.class_name;
+
+                // Pour la première couche avec batch_input_shape
+                if (index === 0 && config.batch_input_shape) {
+                    const inputSize = config.batch_input_shape[config.batch_input_shape.length - 1];
+                    networkLayers.push({
+                        name: 'Input',
+                        neurons: inputSize,
+                        type: 'input',
+                        activation: 'none'
+                    });
+                }
+
+                // Ajouter la couche actuelle
+                if (type === 'Dense' || type === 'LSTM' || type === 'GRU') {
+                    const isOutput = index === layers.length - 1;
+                    networkLayers.push({
+                        name: config.name || `Layer ${index + 1}`,
+                        neurons: config.units,
+                        type: isOutput ? 'output' : 'hidden',
+                        activation: config.activation || 'none'
+                    });
+                }
+            });
+
+            // Extraire les matrices de poids
+            if (modelJson.weightsManifest) {
+                modelJson.weightsManifest.forEach(manifest => {
+                    manifest.weights.forEach(weightInfo => {
+                        const shape = weightInfo.shape;
+                        const numElements = shape.reduce((a, b) => a * b, 1);
+                        const weights = Array.from(weightsData.slice(offset, offset + numElements));
+
+                        if (weightInfo.name.includes('kernel') && shape.length === 2) {
+                            const [rows, cols] = shape;
+                            const matrix = [];
+                            for (let i = 0; i < rows; i++) {
+                                const row = [];
+                                for (let j = 0; j < cols; j++) {
+                                    row.push(weights[i * cols + j]);
+                                }
+                                matrix.push(row);
+                            }
+                            weightMatrices.push({
+                                name: weightInfo.name,
+                                matrix: matrix,
+                                rows: rows,
+                                cols: cols,
+                                weights: weights
+                            });
+                        }
+
+                        offset += numElements;
+                    });
+                });
+            }
+
+            // Calculer les statistiques
+            const allWeights = [];
+            weightMatrices.forEach(wm => allWeights.push(...wm.weights));
+            const minWeight = Math.min(...allWeights);
+            const maxWeight = Math.max(...allWeights);
+            const totalParams = weightsData.length;
+
+            currentNetwork = {
+                layers: networkLayers,
+                weights: weightMatrices,
+                minWeight: minWeight,
+                maxWeight: maxWeight,
+                totalParams: totalParams
+            };
+
+            drawNetwork(currentNetwork);
+
+            // Afficher les statistiques
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('totalLayers').textContent = networkLayers.length;
+            document.getElementById('totalNeurons').textContent = networkLayers.reduce((sum, l) => sum + l.neurons, 0);
+            document.getElementById('totalParams').textContent = totalParams.toLocaleString();
+            document.getElementById('minWeight').textContent = minWeight.toFixed(4);
+            document.getElementById('maxWeight').textContent = maxWeight.toFixed(4);
+        }
+
+        function drawNetwork(network) {
+            const { layers, weights, minWeight, maxWeight } = network;
+
+            // Effacer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 100;
+            const layerSpacing = (canvas.width - 2 * padding) / (layers.length - 1);
+            const maxNeurons = Math.max(...layers.map(l => l.neurons));
+            const neuronRadius = Math.min(20, (canvas.height - 2 * padding) / (maxNeurons * 3));
+
+            const colors = {
+                input: '#4CAF50',
+                hidden: '#2196F3',
+                output: '#FF9800'
+            };
+
+            // Dessiner les connexions avec couleurs basées sur les poids
+            let weightMatrixIndex = 0;
+            for (let i = 0; i < layers.length - 1; i++) {
+                const currentLayer = layers[i];
+                const nextLayer = layers[i + 1];
+
+                const x1 = padding + i * layerSpacing;
+                const x2 = padding + (i + 1) * layerSpacing;
+
+                const weightMatrix = weights[weightMatrixIndex];
+                if (weightMatrix) {
+                    for (let j = 0; j < currentLayer.neurons; j++) {
+                        const y1 = getYPosition(j, currentLayer.neurons, canvas.height, neuronRadius);
+
+                        for (let k = 0; k < nextLayer.neurons; k++) {
+                            const y2 = getYPosition(k, nextLayer.neurons, canvas.height, neuronRadius);
+
+                            // Obtenir le poids de la connexion
+                            const weight = weightMatrix.matrix[j][k];
+                            const normalized = (weight - minWeight) / (maxWeight - minWeight);
+
+                            // Couleur basée sur le poids
+                            const color = getWeightColor(normalized, opacity);
+
+                            ctx.beginPath();
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = lineWidth;
+                            ctx.stroke();
+                        }
+                    }
+                    weightMatrixIndex++;
+                }
+            }
+
+            // Dessiner les neurones
+            layers.forEach((layer, layerIndex) => {
+                const x = padding + layerIndex * layerSpacing;
+                const color = colors[layer.type];
+
+                for (let i = 0; i < layer.neurons; i++) {
+                    const y = getYPosition(i, layer.neurons, canvas.height, neuronRadius);
+
+                    // Cercle du neurone
+                    ctx.beginPath();
+                    ctx.arc(x, y, neuronRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Étiquette de la couche
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(layer.name, x, canvas.height - 40);
+
+                ctx.font = '12px Arial';
+                ctx.fillStyle = '#666';
+                ctx.fillText(`${layer.neurons} neurones`, x, canvas.height - 25);
+                ctx.fillText(`(${layer.activation})`, x, canvas.height - 10);
+            });
+        }
+
+        function getYPosition(neuronIndex, totalNeurons, canvasHeight, neuronRadius) {
+            const availableHeight = canvasHeight - 140;
+            const spacing = availableHeight / (totalNeurons + 1);
+            return 70 + spacing * (neuronIndex + 1);
+        }
+
+        function getWeightColor(normalized, alpha) {
+            let r, g, b;
+
+            if (normalized < 0.5) {
+                // Bleu à blanc
+                const t = normalized * 2;
+                r = Math.floor(33 + (227 * t));
+                g = Math.floor(150 + (92 * t));
+                b = Math.floor(243 + (12 * t));
+            } else {
+                // Blanc à jaune à rouge
+                const t = (normalized - 0.5) * 2;
+                if (t < 0.5) {
+                    // Blanc à jaune
+                    const t2 = t * 2;
+                    r = 255;
+                    g = 255 - Math.floor(20 * t2);
+                    b = 255 - Math.floor(196 * t2);
+                } else {
+                    // Jaune à rouge
+                    const t2 = (t - 0.5) * 2;
+                    r = 255;
+                    g = 235 - Math.floor(148 * t2);
+                    b = 59 - Math.floor(25 * t2);
+                }
+            }
+
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Message initial
+        ctx.fillStyle = '#999';
+        ctx.font = '18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chargez model.json et model.weights.bin pour voir le réseau', canvas.width / 2, canvas.height / 2);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+═══════════════════════════════════════════
+    RÉSUMÉ DU RÉSEAU DE NEURONES
+═══════════════════════════════════════════
+
+ARCHITECTURE
+─────────────────────────────────────────
+Couches d'entrée (Input):   1
+Couches cachées (Hidden):   1
+Couches de sortie (Output): 1
+─────────────────────────────────────────
+TOTAL:                      3
+
+NEURONES PAR COUCHE
+─────────────────────────────────────────
+Couche 1 (Input ):    2 neurones
+Couche 2 (Hidden):   16 neurones
+Couche 3 (Output):    6 neurones
+─────────────────────────────────────────
+TOTAL:                        24 neurones
