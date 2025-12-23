@@ -86,11 +86,7 @@ def generate_greek_dialogue():
     sujets = [
         "Les courses au marché", "Un dîner en famille",
         "Une sortie au cinéma", "Un problème de voisinage",
-        "Un voyage en bus", "Une discussion sur la météo", "un café entre amis",
-        "la planification d'un voyage", "un voyage en bateau", "la visite d'un musée",
-        "la réservation d'un hôtel", "une fête d'anniversaire", "le sport et les loisirs",
-        "la cuisine et les recettes", "les transports en commun", "la santé et le bien-être",
-        "la technologie et les réseaux sociaux", "l'environnement et le climat"
+        "Un voyage en bus", "Une discussion sur la météo"
     ]
     
     sujet = sujets[datetime.now().day % len(sujets)]
