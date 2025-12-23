@@ -1,0 +1,24 @@
+name: Daily Greek Learning Agent
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # 6h du matin à Paris (UTC+1)
+  workflow_dispatch:  # Pour déclencher manuellement si besoin
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install mistralai python-dotenv
+      - name: Run agent
+        env:
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+        run: python greek_learning_agent.py

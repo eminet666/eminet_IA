@@ -3,6 +3,9 @@
 Thumbs.db
 ~*.*
 
+# environment files
+.env
+
 # ignore files
 **/z_*.*
 **/!_*.*
