@@ -5,6 +5,9 @@ Thumbs.db
 
 # environment files
 .env
+__pycache__/
+*.pyc
+venv/
 
 # ignore files
 **/z_*.*
