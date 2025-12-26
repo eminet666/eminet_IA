@@ -19,7 +19,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 0px;
+            padding: 20px;
         }
 
         .container {
@@ -43,6 +43,12 @@
 
         .header h1 {
             font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
         .chat-box {
@@ -79,8 +85,6 @@
             padding: 12px 16px;
             border-radius: 18px;
             word-wrap: break-word;
-            font-size: 17px;
-            line-height: 1.5;
         }
 
         .message.user .message-content {
@@ -147,7 +151,11 @@
         #resetBtn {
             background: #ff6b6b;
             color: white;
-            display: none;
+        }
+
+        #resetBtn:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
         }
 
         .loading {
@@ -215,7 +223,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🇬🇷 Σωκράτης 2.0, το ελληνικό chatbot μου</h1>
+            <h1>🇬🇷 Σωκράτης 2.0, το ελληνικό chatbot σου</h1>
+            <p>Επίπεδο C1 • Mistral AI</p>
         </div>
 
         <div class="chat-box" id="chatBox">
@@ -237,6 +246,7 @@
         <div class="input-area">
             <input type="text" id="userInput" placeholder="Γράψε το μήνυμά σου εδώ..." autocomplete="off">
             <button id="sendBtn">Αποστολή</button>
+            <button id="resetBtn">Επαναφορά</button>
         </div>
     </div>
 
@@ -244,6 +254,7 @@
         const chatBox = document.getElementById('chatBox');
         const userInput = document.getElementById('userInput');
         const sendBtn = document.getElementById('sendBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const loading = document.getElementById('loading');
 
         function addMessage(content, isUser) {
@@ -304,7 +315,20 @@
             }
         }
 
+        async function resetConversation() {
+            if (!confirm('Θέλεις να επαναφέρεις τη συνομιλία;')) return;
+
+            try {
+                await fetch('/reset', { method: 'POST' });
+                chatBox.innerHTML = '';
+                addMessage('Γεια σου! Είμαι εδώ για να συνομιλήσω μαζί σου στα ελληνικά. Πώς μπορώ να σε βοηθήσω σήμερα;', false);
+            } catch (error) {
+                alert('Σφάλμα κατά την επαναφορά');
+            }
+        }
+
         sendBtn.addEventListener('click', sendMessage);
+        resetBtn.addEventListener('click', resetConversation);
 
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !sendBtn.disabled) {
