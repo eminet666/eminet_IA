@@ -5,8 +5,6 @@ import os
 import secrets
 import json
 import re
-import base64
-import requests
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -16,7 +14,6 @@ app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
 
 # Configuration Mistral
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")  # Pour Whisper
 MODEL = "mistral-large-latest"
 
 # Prompt système
@@ -184,71 +181,10 @@ Donne uniquement la traduction en français, sans explications supplémentaires.
             'success': False
         }), 500
 
-@app.route('/transcribe', methods=['POST'])
-def transcribe():
-    """Transcrire l'audio en texte avec Whisper sur Hugging Face"""
-    try:
-        if not HUGGINGFACE_API_KEY:
-            return jsonify({
-                'error': 'Hugging Face API key not configured',
-                'success': False
-            }), 500
-        
-        # Récupérer l'audio en base64
-        data = request.json
-        audio_data = data.get('audio', '')
-        
-        if not audio_data:
-            return jsonify({'error': 'Pas de données audio'}), 400
-        
-        # Décoder le base64
-        if ',' in audio_data:
-            audio_data = audio_data.split(',')[1]
-        
-        audio_bytes = base64.b64decode(audio_data)
-        
-        # Appeler l'API Hugging Face Inference
-        import requests
-        
-        API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
-        headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-        
-        response = requests.post(API_URL, headers=headers, data=audio_bytes)
-        result = response.json()
-        
-        # Vérifier si le modèle charge
-        if 'error' in result and 'loading' in result['error'].lower():
-            return jsonify({
-                'error': 'Le modèle se charge, réessayez dans 20 secondes',
-                'success': False
-            }), 503
-        
-        if 'error' in result:
-            print(f"Hugging Face error: {result}")
-            return jsonify({
-                'error': result.get('error', 'Erreur inconnue'),
-                'success': False
-            }), 500
-        
-        # Extraire le texte transcrit
-        text = result.get('text', '')
-        
-        return jsonify({
-            'text': text.strip(),
-            'success': True
-        })
-        
-    except Exception as e:
-        print(f"Transcription error: {e}")
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
-
 if __name__ == '__main__':
     if not MISTRAL_API_KEY:
         print("⚠️  ERREUR: MISTRAL_API_KEY non trouvée dans les variables d'environnement!")
         exit(1)
     
     # Pour le développement local
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000) 

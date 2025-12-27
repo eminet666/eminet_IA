@@ -385,12 +385,14 @@
         const SPEECH_RATE = 0.8;
         let recognition = null;
         let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
 
         // Détecter iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-        // Initialiser la reconnaissance vocale (ne fonctionne pas sur iOS Safari)
+        // Initialiser la reconnaissance vocale (desktop uniquement)
         if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
@@ -403,7 +405,6 @@
                 userInput.value = transcript;
                 isRecording = false;
                 micBtn.classList.remove('recording');
-                // Envoyer automatiquement le message
                 sendMessage();
             };
 
@@ -420,24 +421,90 @@
                 isRecording = false;
                 micBtn.classList.remove('recording');
             };
-        } else if (isIOS) {
-            // Sur iOS, désactiver le bouton et expliquer
-            micBtn.style.opacity = '0.3';
-            micBtn.style.cursor = 'not-allowed';
-            micBtn.title = 'La reconnaissance vocale n\'est pas disponible sur iOS Safari. Utilisez Chrome sur Android ou desktop.';
+        }
+
+        async function startMobileRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Utiliser un format compatible
+                const options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/mp4';
+                }
+
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = function (event) {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async function () {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+
+                    // Convertir en base64
+                    const reader = new FileReader();
+                    reader.onloadend = async function () {
+                        const base64Audio = reader.result;
+
+                        try {
+                            // Envoyer au serveur pour transcription
+                            const response = await fetch('/transcribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio: base64Audio })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                userInput.value = data.text;
+                                sendMessage();
+                            } else {
+                                alert('Erreur de transcription: ' + (data.error || 'Inconnu'));
+                            }
+                        } catch (error) {
+                            console.error('Transcription error:', error);
+                            alert('Erreur lors de la transcription');
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob);
+
+                    // Arrêter le stream
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+
+            } catch (error) {
+                console.error('Erreur micro:', error);
+                alert('Impossible d\'accéder au microphone: ' + error.message);
+            }
+        }
+
+        function stopMobileRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            }
         }
 
         function toggleRecording() {
-            if (isIOS) {
-                alert('Désolé, la reconnaissance vocale n\'est pas disponible sur iOS Safari.\n\nPour utiliser cette fonctionnalité :\n- Utilisez Chrome sur Android\n- Utilisez Chrome/Edge sur ordinateur\n- Ou tapez votre message');
+            // Sur iOS/mobile, utiliser MediaRecorder + Whisper
+            if (isIOS || !recognition) {
+                if (isRecording) {
+                    stopMobileRecording();
+                } else {
+                    startMobileRecording();
+                }
                 return;
             }
 
-            if (!recognition) {
-                alert('La reconnaissance vocale n\'est pas supportée par votre navigateur.');
-                return;
-            }
-
+            // Sur desktop, utiliser SpeechRecognition
             if (isRecording) {
                 recognition.stop();
             } else {
