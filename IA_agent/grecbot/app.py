@@ -217,13 +217,52 @@ def transcribe():
             }), 400
         
         # Appeler l'API Hugging Face Inference
-        API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
-        headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+        # Essayer plusieurs modèles Whisper dans l'ordre de préférence
+        models = [
+            "openai/whisper-large-v3-turbo",
+            "openai/whisper-medium",
+            "openai/whisper-small",
+        ]
         
-        print("Calling Hugging Face API...")
-        response = requests.post(API_URL, headers=headers, data=audio_bytes, timeout=30)
+        result = None
+        used_model = None
+        last_error = None
         
-        print(f"Response status: {response.status_code}")
+        for model in models:
+            API_URL = f"https://api-inference.huggingface.co/models/{model}"
+            headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+            
+            print(f"Trying model: {model}")
+            try:
+                response = requests.post(API_URL, headers=headers, data=audio_bytes, timeout=30)
+                
+                print(f"Response status: {response.status_code}")
+                
+                if response.status_code == 200:
+                    used_model = model
+                    print(f"Success with model: {model}")
+                    break
+                elif response.status_code == 503:
+                    # Modèle en cours de chargement, continuer vers le suivant
+                    print(f"Model {model} is loading, trying next...")
+                    continue
+                else:
+                    print(f"Model {model} returned status {response.status_code}: {response.text[:200]}")
+                    last_error = response.text
+                    continue
+                    
+            except Exception as e:
+                print(f"Error with model {model}: {e}")
+                last_error = str(e)
+                continue
+        
+        if not used_model:
+            return jsonify({
+                'error': 'Aucun modèle Whisper disponible',
+                'details': last_error,
+                'success': False
+            }), 503
+        
         print(f"Response text: {response.text[:500]}")  # Premiers 500 caractères
         
         # Vérifier le statut HTTP
