@@ -386,8 +386,12 @@
         let recognition = null;
         let isRecording = false;
 
-        // Initialiser la reconnaissance vocale
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        // Détecter iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        // Initialiser la reconnaissance vocale (ne fonctionne pas sur iOS Safari)
+        if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
@@ -416,9 +420,19 @@
                 isRecording = false;
                 micBtn.classList.remove('recording');
             };
+        } else if (isIOS) {
+            // Sur iOS, désactiver le bouton et expliquer
+            micBtn.style.opacity = '0.3';
+            micBtn.style.cursor = 'not-allowed';
+            micBtn.title = 'La reconnaissance vocale n\'est pas disponible sur iOS Safari. Utilisez Chrome sur Android ou desktop.';
         }
 
         function toggleRecording() {
+            if (isIOS) {
+                alert('Désolé, la reconnaissance vocale n\'est pas disponible sur iOS Safari.\n\nPour utiliser cette fonctionnalité :\n- Utilisez Chrome sur Android\n- Utilisez Chrome/Edge sur ordinateur\n- Ou tapez votre message');
+                return;
+            }
+
             if (!recognition) {
                 alert('La reconnaissance vocale n\'est pas supportée par votre navigateur.');
                 return;
