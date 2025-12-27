@@ -7,6 +7,7 @@ import json
 import re
 import base64
 import requests
+import tempfile
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -16,7 +17,7 @@ app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
 
 # Configuration Mistral
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")  # Pour Whisper
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # Pour Whisper via Groq
 MODEL = "mistral-large-latest"
 
 # Prompt système
@@ -186,11 +187,11 @@ Donne uniquement la traduction en français, sans explications supplémentaires.
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
-    """Transcrire l'audio en texte avec Whisper sur Hugging Face"""
+    """Transcrire l'audio en texte avec Whisper via Groq"""
     try:
-        if not HUGGINGFACE_API_KEY:
+        if not GROQ_API_KEY:
             return jsonify({
-                'error': 'Hugging Face API key not configured',
+                'error': 'Groq API key not configured',
                 'success': False
             }), 500
         
@@ -216,113 +217,39 @@ def transcribe():
                 'success': False
             }), 400
         
-        # Appeler l'API Hugging Face Inference
-        # Essayer plusieurs modèles Whisper dans l'ordre de préférence
-        models = [
-            "openai/whisper-large-v3-turbo",
-            "openai/whisper-medium",
-            "openai/whisper-small",
-        ]
+        # Sauvegarder temporairement l'audio
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as temp_file:
+            temp_file.write(audio_bytes)
+            temp_path = temp_file.name
         
-        result = None
-        used_model = None
-        last_error = None
-        
-        for model in models:
-            API_URL = f"https://api-inference.huggingface.co/models/{model}"
-            headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-            
-            print(f"Trying model: {model}")
-            try:
-                response = requests.post(API_URL, headers=headers, data=audio_bytes, timeout=30)
-                
-                print(f"Response status: {response.status_code}")
-                
-                if response.status_code == 200:
-                    used_model = model
-                    print(f"Success with model: {model}")
-                    break
-                elif response.status_code == 503:
-                    # Modèle en cours de chargement, continuer vers le suivant
-                    print(f"Model {model} is loading, trying next...")
-                    continue
-                else:
-                    print(f"Model {model} returned status {response.status_code}: {response.text[:200]}")
-                    last_error = response.text
-                    continue
-                    
-            except Exception as e:
-                print(f"Error with model {model}: {e}")
-                last_error = str(e)
-                continue
-        
-        if not used_model:
-            return jsonify({
-                'error': 'Aucun modèle Whisper disponible',
-                'details': last_error,
-                'success': False
-            }), 503
-        
-        print(f"Response text: {response.text[:500]}")  # Premiers 500 caractères
-        
-        # Vérifier le statut HTTP
-        if response.status_code != 200:
-            return jsonify({
-                'error': f'Erreur API Hugging Face (status {response.status_code})',
-                'details': response.text[:200],
-                'success': False
-            }), response.status_code
-        
-        # Parser la réponse JSON
         try:
-            result = response.json()
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error: {e}")
-            print(f"Raw response: {response.text}")
-            return jsonify({
-                'error': 'Réponse invalide de Hugging Face',
-                'details': response.text[:200],
-                'success': False
-            }), 500
-        
-        # Vérifier si le modèle charge
-        if isinstance(result, dict) and 'error' in result:
-            error_msg = result['error']
-            if 'loading' in error_msg.lower() or 'currently loading' in error_msg.lower():
-                return jsonify({
-                    'error': 'Le modèle se charge, réessayez dans 20 secondes',
-                    'success': False,
-                    'loading': True
-                }), 503
+            # Appeler l'API Groq (compatible OpenAI)
+            from groq import Groq
             
-            print(f"Hugging Face error: {result}")
+            client = Groq(api_key=GROQ_API_KEY)
+            
+            with open(temp_path, 'rb') as audio_file:
+                print("Calling Groq API for transcription...")
+                transcription = client.audio.transcriptions.create(
+                    file=audio_file,
+                    model="whisper-large-v3",
+                    language="el",  # Grec
+                    response_format="json"
+                )
+            
+            text = transcription.text.strip()
+            print(f"Transcribed text: {text}")
+            
             return jsonify({
-                'error': error_msg,
-                'success': False
-            }), 500
+                'text': text,
+                'success': True
+            })
+            
+        finally:
+            # Nettoyer le fichier temporaire
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
         
-        # Extraire le texte transcrit
-        text = result.get('text', '') if isinstance(result, dict) else ''
-        
-        if not text:
-            print(f"No text in result: {result}")
-            return jsonify({
-                'error': 'Aucun texte transcrit',
-                'success': False
-            }), 500
-        
-        print(f"Transcribed text: {text}")
-        
-        return jsonify({
-            'text': text.strip(),
-            'success': True
-        })
-        
-    except requests.Timeout:
-        return jsonify({
-            'error': 'Timeout - le serveur Hugging Face ne répond pas',
-            'success': False
-        }), 504
     except Exception as e:
         print(f"Transcription error: {e}")
         import traceback

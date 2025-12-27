@@ -1,8 +1,9 @@
 https://grecbot.onrender.com/
 
-Sur iphone iOS, j'ai une erreur : "erreur de transcription : expecting value : line 1 column 1 (char 0)
 Ne joue pas le son correctement : pas la bonne voix, ni le bon texte
 traduction même corps avec mots soulignés
 texte sans le gras, seulement souligné
+
+
 
 
