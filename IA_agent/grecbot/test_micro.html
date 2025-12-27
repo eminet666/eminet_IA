@@ -1,0 +1,49 @@
+let mediaRecorder;
+let audioChunks = [];
+
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const status = document.getElementById("status");
+const audio = document.getElementById("audio");
+
+startBtn.addEventListener("click", async () => {
+status.textContent = "Demande d’accès au micro…";
+
+try {
+const stream = await navigator.mediaDevices.getUserMedia({
+audio: true
+});
+
+mediaRecorder = new MediaRecorder(stream);
+audioChunks = [];
+
+mediaRecorder.ondataavailable = (event) => {
+audioChunks.push(event.data);
+};
+
+mediaRecorder.onstop = () => {
+const blob = new Blob(audioChunks, { type: "audio/webm" });
+const url = URL.createObjectURL(blob);
+audio.src = url;
+status.textContent = "✅ Enregistrement terminé";
+};
+
+mediaRecorder.start();
+status.textContent = "🎙️ Enregistrement en cours…";
+
+startBtn.disabled = true;
+stopBtn.disabled = false;
+
+} catch (err) {
+console.error(err);
+status.textContent =
+"❌ Erreur micro : " + err.name + " – " + err.message;
+}
+});
+
+stopBtn.addEventListener("click", () => {
+mediaRecorder.stop();
+
+startBtn.disabled = false;
+stopBtn.disabled = true;
+});
