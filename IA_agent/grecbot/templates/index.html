@@ -399,6 +399,8 @@
                 userInput.value = transcript;
                 isRecording = false;
                 micBtn.classList.remove('recording');
+                // Envoyer automatiquement le message
+                sendMessage();
             };
 
             recognition.onerror = function (event) {
