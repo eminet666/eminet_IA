@@ -1,49 +1,91 @@
-let mediaRecorder;
-let audioChunks = [];
+<!DOCTYPE html>
+<html lang="fr">
 
-const startBtn = document.getElementById("startBtn");
-const stopBtn = document.getElementById("stopBtn");
-const status = document.getElementById("status");
-const audio = document.getElementById("audio");
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Micro iOS / Chrome</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+        }
 
-startBtn.addEventListener("click", async () => {
-status.textContent = "Demande d’accès au micro…";
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
 
-try {
-const stream = await navigator.mediaDevices.getUserMedia({
-audio: true
-});
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
 
-mediaRecorder = new MediaRecorder(stream);
-audioChunks = [];
+<body>
 
-mediaRecorder.ondataavailable = (event) => {
-audioChunks.push(event.data);
-};
+    <h1>🎤 Test du microphone</h1>
+    <p>Appuie sur le bouton pour tester le micro.</p>
 
-mediaRecorder.onstop = () => {
-const blob = new Blob(audioChunks, { type: "audio/webm" });
-const url = URL.createObjectURL(blob);
-audio.src = url;
-status.textContent = "✅ Enregistrement terminé";
-};
+    <button id="startBtn">Démarrer l’enregistrement</button>
+    <button id="stopBtn" disabled>Arrêter</button>
 
-mediaRecorder.start();
-status.textContent = "🎙️ Enregistrement en cours…";
+    <p id="status">Statut : en attente</p>
 
-startBtn.disabled = true;
-stopBtn.disabled = false;
+    <audio id="audio" controls></audio>
 
-} catch (err) {
-console.error(err);
-status.textContent =
-"❌ Erreur micro : " + err.name + " – " + err.message;
-}
-});
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
 
-stopBtn.addEventListener("click", () => {
-mediaRecorder.stop();
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const status = document.getElementById("status");
+        const audio = document.getElementById("audio");
 
-startBtn.disabled = false;
-stopBtn.disabled = true;
-});
+        startBtn.addEventListener("click", async () => {
+            status.textContent = "Demande d’accès au micro…";
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: "audio/webm" });
+                    const url = URL.createObjectURL(blob);
+                    audio.src = url;
+                    status.textContent = "✅ Enregistrement terminé";
+                };
+
+                mediaRecorder.start();
+                status.textContent = "🎙️ Enregistrement en cours…";
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+
+            } catch (err) {
+                console.error(err);
+                status.textContent = "❌ Erreur micro : " + err.name + " – " + err.message;
+            }
+        });
+
+        stopBtn.addEventListener("click", () => {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+    </script>
+
+</body>
+
+</html>
