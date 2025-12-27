@@ -67,7 +67,7 @@
                 // Simuler un audio base64 (remplacer par un vrai enregistrement si nécessaire)
                 const fakeAudio = "data:audio/webm;base64,UklGRl9vT19X..."; // Exemple simplifié
 
-                const response = await fetch('http://TON_SERVEUR:5000/transcribe', {
+                const response = await fetch('http://192.168.1.101:5000/transcribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ audio: fakeAudio })
