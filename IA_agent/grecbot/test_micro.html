@@ -2,8 +2,8 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Micro iOS / Chrome</title>
     <style>
         body {
@@ -23,55 +23,81 @@
             margin-top: 15px;
             font-weight: bold;
         }
+
+        #visualizer {
+            margin-top: 20px;
+            width: 100%;
+            height: 100px;
+            background: #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #bar {
+            height: 100%;
+            width: 0;
+            background: #4caf50;
+        }
     </style>
 </head>
 
 <body>
 
-    <h1>🎤 Test du microphone</h1>
-    <p>Appuie sur le bouton pour tester le micro.</p>
+    <h1>🎤 Test du micro</h1>
+    <p>Appuie sur le bouton pour tester le micro</p>
 
-    <button id="startBtn">Démarrer l’enregistrement</button>
+    <button id="startBtn">Démarrer</button>
     <button id="stopBtn" disabled>Arrêter</button>
 
     <p id="status">Statut : en attente</p>
 
-    <audio id="audio" controls></audio>
+    <div id="visualizer">
+        <div id="bar"></div>
+    </div>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
+        let audioCtx;
+        let analyser;
+        let dataArray;
+        let source;
+        let stream;
+        let animationId;
 
         const startBtn = document.getElementById("startBtn");
         const stopBtn = document.getElementById("stopBtn");
         const status = document.getElementById("status");
-        const audio = document.getElementById("audio");
+        const bar = document.getElementById("bar");
 
         startBtn.addEventListener("click", async () => {
             status.textContent = "Demande d’accès au micro…";
-
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                source = audioCtx.createMediaStreamSource(stream);
+                analyser = audioCtx.createAnalyser();
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                source.connect(analyser);
 
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: "audio/webm" });
-                    const url = URL.createObjectURL(blob);
-                    audio.src = url;
-                    status.textContent = "✅ Enregistrement terminé";
-                };
-
-                mediaRecorder.start();
-                status.textContent = "🎙️ Enregistrement en cours…";
+                status.textContent = "🎙️ Micro actif ! Parle dans le micro…";
 
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
+
+                function visualize() {
+                    analyser.getByteTimeDomainData(dataArray);
+                    // calcul d’un niveau moyen
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        let val = dataArray[i] - 128;
+                        sum += val * val;
+                    }
+                    let rms = Math.sqrt(sum / dataArray.length);
+                    let percent = Math.min(rms * 2, 100); // 0-100%
+                    bar.style.width = percent + "%";
+                    animationId = requestAnimationFrame(visualize);
+                }
+                visualize();
 
             } catch (err) {
                 console.error(err);
@@ -80,7 +106,12 @@
         });
 
         stopBtn.addEventListener("click", () => {
-            mediaRecorder.stop();
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (animationId) cancelAnimationFrame(animationId);
+            bar.style.width = "0";
+            status.textContent = "⏹️ Micro arrêté";
             startBtn.disabled = false;
             stopBtn.disabled = true;
         });
