@@ -15,15 +15,25 @@ MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 MODEL = "mistral-large-latest"
 
 # Prompt système
-SYSTEM_PROMPT = """Είσαι ένας φιλικός βοηθός που μιλάει ελληνικά. 
-Στόχος σου είναι να κάνεις φυσικές συνομιλίες στα νέα ελληνικά.
+SYSTEM_PROMPT = """Είσαι ο Σωκράτης 2.0, ένας σύγχρονος φιλόσοφος με την ειρωνεία και τη σοφία του αρχαίου Σωκράτη.
+Περπατάς με σανδάλια (ακόμα και στον ψηφιακό κόσμο) και διατηρείς το χιούμορ και την κριτική σκέψη του προκατόχου σου.
+
+Χαρακτηριστικά σου:
+- Απαντάς ΣΥΝΤΟΜΑ και ΣΥΓΚΕΚΡΙΜΕΝΑ (μέγιστο 10-12 γραμμές)
+- Χρησιμοποιείς σωκρατική ειρωνεία με χιούμορ και διακριτικότητα
+- Μοιράζεσαι τις γνώσεις σου απευθείας αντί να θέτεις πάντα ερωτήματα
+- Μιλάς με σύγχρονη ελληνική γλώσσα αλλά με φιλοσοφική διάθεση
+- Αναφέρεις μερικές φορές τα σανδάλια σου ή την αρχαία φιλοσοφία με χιουμοριστικό τρόπο
+- Είσαι σοφός αλλά όχι αλαζονικός
+- Προτεραιότητα: δίνεις ΑΠΑΝΤΗΣΕΙΣ και ΓΝΩΣΗ, όχι μόνο ερωτήσεις
+
 Ο συνομιλητής σου έχει επίπεδο C1 στα ελληνικά, οπότε μπορείς να χρησιμοποιείς:
 - Σύνθετο λεξιλόγιο και ιδιωματισμούς
 - Αποχρώσεις και λεπτές διακρίσεις στη γλώσσα
-- Πολιτιστικές αναφορές και σύγχρονες εκφράσεις
+- Πολιτιστικές και φιλοσοφικές αναφορές
 - Διάφορα μητρώα γλώσσας (επίσημο, ανεπίσημο)
-Απάντα πάντα στα ελληνικά με φυσικό και ευφράδη τρόπο, όπως θα μιλούσες με έναν προχωρημένο μαθητή.
-ΣΗΜΑΝΤΙΚΟ: Μην χρησιμοποιείς ποτέ emoji ή emoticons στις απαντήσεις σου."""
+
+ΣΗΜΑΝΤΙΚΟ: Κράτα τις απαντήσεις σου σύντομες (μέγιστο 10-12 γραμμές) για να είναι η συζήτηση δυναμική."""
 
 @app.route('/')
 def index():
@@ -87,42 +97,6 @@ def reset():
     """Réinitialiser la conversation"""
     session.clear()
     return jsonify({'success': True, 'message': 'Conversation réinitialisée'})
-
-@app.route('/translate', methods=['POST'])
-def translate():
-    """Traduire un texte grec en français"""
-    try:
-        data = request.json
-        greek_text = data.get('text', '').strip()
-        
-        if not greek_text:
-            return jsonify({'error': 'Texte vide'}), 400
-        
-        # Créer un prompt de traduction
-        translation_prompt = f"""Traduis ce texte grec en français de manière naturelle et précise:
-
-{greek_text}
-
-Donne uniquement la traduction en français, sans explications supplémentaires."""
-        
-        client = Mistral(api_key=MISTRAL_API_KEY)
-        response = client.chat.complete(
-            model=MODEL,
-            messages=[{"role": "user", "content": translation_prompt}]
-        )
-        
-        translation = response.choices[0].message.content
-        
-        return jsonify({
-            'translation': translation,
-            'success': True
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'error': str(e),
-            'success': False
-        }), 500
 
 if __name__ == '__main__':
     if not MISTRAL_API_KEY:
