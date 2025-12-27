@@ -207,39 +207,87 @@ def transcribe():
         
         audio_bytes = base64.b64decode(audio_data)
         
-        # Appeler l'API Hugging Face Inference
-        import requests
+        print(f"Audio size: {len(audio_bytes)} bytes")
         
+        # Vérifier que l'audio n'est pas vide
+        if len(audio_bytes) < 100:
+            return jsonify({
+                'error': 'Audio trop court ou vide',
+                'success': False
+            }), 400
+        
+        # Appeler l'API Hugging Face Inference
         API_URL = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
         headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
         
-        response = requests.post(API_URL, headers=headers, data=audio_bytes)
-        result = response.json()
+        print("Calling Hugging Face API...")
+        response = requests.post(API_URL, headers=headers, data=audio_bytes, timeout=30)
+        
+        print(f"Response status: {response.status_code}")
+        print(f"Response text: {response.text[:500]}")  # Premiers 500 caractères
+        
+        # Vérifier le statut HTTP
+        if response.status_code != 200:
+            return jsonify({
+                'error': f'Erreur API Hugging Face (status {response.status_code})',
+                'details': response.text[:200],
+                'success': False
+            }), response.status_code
+        
+        # Parser la réponse JSON
+        try:
+            result = response.json()
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error: {e}")
+            print(f"Raw response: {response.text}")
+            return jsonify({
+                'error': 'Réponse invalide de Hugging Face',
+                'details': response.text[:200],
+                'success': False
+            }), 500
         
         # Vérifier si le modèle charge
-        if 'error' in result and 'loading' in result['error'].lower():
-            return jsonify({
-                'error': 'Le modèle se charge, réessayez dans 20 secondes',
-                'success': False
-            }), 503
-        
-        if 'error' in result:
+        if isinstance(result, dict) and 'error' in result:
+            error_msg = result['error']
+            if 'loading' in error_msg.lower() or 'currently loading' in error_msg.lower():
+                return jsonify({
+                    'error': 'Le modèle se charge, réessayez dans 20 secondes',
+                    'success': False,
+                    'loading': True
+                }), 503
+            
             print(f"Hugging Face error: {result}")
             return jsonify({
-                'error': result.get('error', 'Erreur inconnue'),
+                'error': error_msg,
                 'success': False
             }), 500
         
         # Extraire le texte transcrit
-        text = result.get('text', '')
+        text = result.get('text', '') if isinstance(result, dict) else ''
+        
+        if not text:
+            print(f"No text in result: {result}")
+            return jsonify({
+                'error': 'Aucun texte transcrit',
+                'success': False
+            }), 500
+        
+        print(f"Transcribed text: {text}")
         
         return jsonify({
             'text': text.strip(),
             'success': True
         })
         
+    except requests.Timeout:
+        return jsonify({
+            'error': 'Timeout - le serveur Hugging Face ne répond pas',
+            'success': False
+        }), 504
     except Exception as e:
         print(f"Transcription error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': str(e),
             'success': False
