@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Synthèse Vocale</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin: 10px 0;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Test Synthèse Vocale</h1>
+    <input type="text" id="textInput" value="Γειά σου!" placeholder="Texte à lire">
+    <button id="speakBtn">Lire le texte</button>
+    <div id="status">Prêt à tester.</div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const speakBtn = document.getElementById('speakBtn');
+        const statusDiv = document.getElementById('status');
+
+        function updateStatus(message, isError = false) {
+            statusDiv.textContent = message;
+            statusDiv.className = isError ? 'error' : 'success';
+        }
+
+        function speakText() {
+            const text = textInput.value.trim();
+            if (!text) {
+                updateStatus("Veuillez entrer un texte.", true);
+                return;
+            }
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'el-GR';
+                utterance.rate = 0.8;
+
+                utterance.onstart = () => updateStatus("Lecture en cours...");
+                utterance.onend = () => updateStatus("Lecture terminée.");
+                utterance.onerror = (event) => updateStatus(`Erreur: ${event.error}`, true);
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                updateStatus("Synthèse vocale non supportée.", true);
+            }
+        }
+
+        speakBtn.addEventListener('click', speakText);
+    </script>
+</body>
+
+</html>

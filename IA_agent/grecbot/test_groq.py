@@ -26,6 +26,6 @@ def transcrire_audio(fichier_audio):
     except Exception as e:
         return f"Erreur lors de la transcription : {e}"
 
-fichier_audio = "fables_02_11_lafontaine.mp3"
+fichier_audio = "test_mp3.mp3"
 texte_transcrit = transcrire_audio(fichier_audio)
 print("Transcription :", texte_transcrit)
