@@ -3,6 +3,8 @@ from mistralai import Mistral
 from dotenv import load_dotenv
 import os
 import secrets
+import json
+import re
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -23,7 +25,23 @@ SYSTEM_PROMPT = """Είσαι ένας φιλικός βοηθός που μιλ
 - Πολιτιστικές αναφορές και σύγχρονες εκφράσεις
 - Διάφορα μητρώα γλώσσας (επίσημο, ανεπίσημο)
 Απάντα πάντα στα ελληνικά με φυσικό και ευφράδη τρόπο, όπως θα μιλούσες με έναν προχωρημένο μαθητή.
-ΣΗΜΑΝΤΙΚΟ: Μην χρησιμοποιείς ποτέ emoji ή emoticons στις απαντήσεις σου."""
+ΣΗΜΑΝΤΙΚΟ: Μην χρησιμοποιείς ποτέ emoji ή emoticons στις απαντήσεις σου, ούτε στο κείμενο ούτε στο JSON.
+
+CRITICAL: Your response MUST be valid JSON with this exact structure:
+{
+  "text": "your full Greek response here",
+  "vocabulary": [
+    {"word": "Greek word", "translation": "French translation in context"},
+    {"word": "another word", "translation": "its translation"}
+  ]
+}
+
+Rules for vocabulary:
+- Select maximum 10 complex/advanced words from your response
+- Choose words that are C1 level or challenging
+- Provide contextual French translation (not dictionary definition)
+- Return ONLY valid JSON, no markdown, no preamble, no explanation
+- NO emojis or emoticons anywhere in the JSON"""
 
 @app.route('/')
 def index():
@@ -62,17 +80,56 @@ def chat():
         # Extraire la réponse
         assistant_message = response.choices[0].message.content
         
-        # Ajouter à l'historique
-        history.append({"role": "assistant", "content": assistant_message})
+        # Nettoyer la réponse (enlever markdown si présent)
+        cleaned = assistant_message.strip()
+        if cleaned.startswith('```json'):
+            cleaned = re.sub(r'^```json\s*', '', cleaned)
+            cleaned = re.sub(r'\s*```$', '', cleaned)
+        elif cleaned.startswith('```'):
+            cleaned = re.sub(r'^```\s*', '', cleaned)
+            cleaned = re.sub(r'\s*```$', '', cleaned)
         
-        # Sauvegarder l'historique (limiter à 50 messages pour éviter les sessions trop grandes)
-        if len(history) > 52:  # 1 system + 50 messages + 1 nouveau
+        try:
+            parsed = json.loads(cleaned)
+            text = parsed.get('text', '').strip()
+            vocabulary = parsed.get('vocabulary', [])
+            
+            # Nettoyer complètement le texte de tous les caractères problématiques
+            text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            # Supprimer les doubles espaces
+            import re as re_module
+            text = re_module.sub(r'\s+', ' ', text)
+            
+            # Nettoyer aussi les traductions du vocabulaire
+            for item in vocabulary:
+                if 'translation' in item:
+                    item['translation'] = item['translation'].replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+                    item['translation'] = re_module.sub(r'\s+', ' ', item['translation']).strip()
+                if 'word' in item:
+                    item['word'] = item['word'].replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+                    item['word'] = re_module.sub(r'\s+', ' ', item['word']).strip()
+            
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {assistant_message}")
+            # Si le parsing échoue, utiliser le texte brut
+            text = assistant_message.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            import re as re_module
+            text = re_module.sub(r'\s+', ' ', text)
+            vocabulary = []
+        
+        # Ajouter à l'historique (texte seulement, pas le JSON)
+        history.append({"role": "assistant", "content": text})
+        
+        # Limiter l'historique
+        if len(history) > 52:
             history = [history[0]] + history[-50:]
         
         session['history'] = history
         
         return jsonify({
-            'response': assistant_message,
+            'response': text,
+            'vocabulary': vocabulary,
             'success': True
         })
         
@@ -130,4 +187,4 @@ if __name__ == '__main__':
         exit(1)
     
     # Pour le développement local
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000) 
