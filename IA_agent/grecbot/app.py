@@ -17,7 +17,7 @@ app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
 
 # Configuration Mistral
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # Pour Whisper via Groq
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # Pour Whisper ultra-rapide
 MODEL = "mistral-large-latest"
 
 # Prompt système
@@ -187,7 +187,7 @@ Donne uniquement la traduction en français, sans explications supplémentaires.
 
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
-    """Transcrire l'audio en texte avec Whisper via Groq"""
+    """Transcrire l'audio en texte avec Whisper sur Groq (ultra-rapide et gratuit)"""
     try:
         if not GROQ_API_KEY:
             return jsonify({
@@ -208,40 +208,44 @@ def transcribe():
         
         audio_bytes = base64.b64decode(audio_data)
         
-        print(f"Audio size: {len(audio_bytes)} bytes")
-        
-        # Vérifier que l'audio n'est pas vide
-        if len(audio_bytes) < 100:
-            return jsonify({
-                'error': 'Audio trop court ou vide',
-                'success': False
-            }), 400
-        
-        # Sauvegarder temporairement l'audio
+        # Sauvegarder temporairement
+        import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as temp_file:
             temp_file.write(audio_bytes)
             temp_path = temp_file.name
         
         try:
             # Appeler l'API Groq (compatible OpenAI)
-            from groq import Groq
+            import requests
             
-            client = Groq(api_key=GROQ_API_KEY)
+            # Groq utilise une API compatible OpenAI
+            url = "https://api.groq.com/openai/v1/audio/transcriptions"
+            headers = {
+                "Authorization": f"Bearer {GROQ_API_KEY}"
+            }
             
             with open(temp_path, 'rb') as audio_file:
-                print("Calling Groq API for transcription...")
-                transcription = client.audio.transcriptions.create(
-                    file=audio_file,
-                    model="whisper-large-v3",
-                    language="el",  # Grec
-                    response_format="json"
-                )
+                files = {
+                    'file': ('audio.webm', audio_file, 'audio/webm'),
+                    'model': (None, 'whisper-large-v3'),
+                    'language': (None, 'el')  # Grec
+                }
+                
+                response = requests.post(url, headers=headers, files=files)
+                result = response.json()
             
-            text = transcription.text.strip()
-            print(f"Transcribed text: {text}")
+            if 'error' in result:
+                print(f"Groq error: {result}")
+                return jsonify({
+                    'error': result.get('error', {}).get('message', 'Erreur inconnue'),
+                    'success': False
+                }), 500
+            
+            # Extraire le texte transcrit
+            text = result.get('text', '')
             
             return jsonify({
-                'text': text,
+                'text': text.strip(),
                 'success': True
             })
             
