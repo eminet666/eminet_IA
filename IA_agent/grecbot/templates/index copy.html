@@ -385,9 +385,15 @@
         const SPEECH_RATE = 0.8;
         let recognition = null;
         let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
 
-        // Initialiser la reconnaissance vocale
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        // Détecter iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        // Initialiser la reconnaissance vocale (desktop uniquement)
+        if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'el-GR';
@@ -399,7 +405,6 @@
                 userInput.value = transcript;
                 isRecording = false;
                 micBtn.classList.remove('recording');
-                // Envoyer automatiquement le message
                 sendMessage();
             };
 
@@ -418,12 +423,146 @@
             };
         }
 
+        async function startMobileRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 16000
+                    }
+                });
+
+                // Détecter le format supporté
+                let mimeType = 'audio/webm;codecs=opus';
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'audio/webm';
+                }
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'audio/mp4';
+                }
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    mimeType = 'audio/ogg;codecs=opus';
+                }
+
+                console.log('Using MIME type:', mimeType);
+
+                const options = { mimeType: mimeType };
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = function (event) {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                        console.log('Audio chunk:', event.data.size, 'bytes');
+                    }
+                };
+
+                mediaRecorder.onstop = async function () {
+                    console.log('Recording stopped, chunks:', audioChunks.length);
+
+                    if (audioChunks.length === 0) {
+                        alert('Aucun audio enregistré. Réessayez.');
+                        stream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
+
+                    const audioBlob = new Blob(audioChunks, { type: mimeType });
+                    console.log('Audio blob size:', audioBlob.size, 'bytes');
+
+                    if (audioBlob.size < 1000) {
+                        alert('Audio trop court. Parlez plus longtemps.');
+                        stream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
+
+                    // Afficher un indicateur de chargement
+                    showLoading(true);
+
+                    // Convertir en base64
+                    const reader = new FileReader();
+                    reader.onloadend = async function () {
+                        const base64Audio = reader.result;
+                        console.log('Base64 length:', base64Audio.length);
+
+                        try {
+                            // Envoyer au serveur pour transcription
+                            const response = await fetch('/transcribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio: base64Audio })
+                            });
+
+                            showLoading(false);
+
+                            const data = await response.json();
+                            console.log('Transcription response:', data);
+
+                            if (data.success) {
+                                userInput.value = data.text;
+                                sendMessage();
+                            } else if (data.loading) {
+                                alert('Le modèle se charge. Réessayez dans 20 secondes.');
+                            } else {
+                                console.error('Transcription error:', data);
+                                alert('Erreur de transcription: ' + (data.error || 'Inconnu'));
+                            }
+                        } catch (error) {
+                            showLoading(false);
+                            console.error('Transcription error:', error);
+                            alert('Erreur lors de la transcription: ' + error.message);
+                        }
+                    };
+
+                    reader.onerror = function (error) {
+                        showLoading(false);
+                        console.error('FileReader error:', error);
+                        alert('Erreur de lecture audio');
+                    };
+
+                    reader.readAsDataURL(audioBlob);
+
+                    // Arrêter le stream
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.onerror = function (event) {
+                    console.error('MediaRecorder error:', event.error);
+                    alert('Erreur d\'enregistrement: ' + event.error);
+                };
+
+                // Enregistrer des chunks toutes les secondes
+                mediaRecorder.start(1000);
+                isRecording = true;
+                micBtn.classList.add('recording');
+                console.log('Recording started');
+
+            } catch (error) {
+                console.error('Erreur micro:', error);
+                alert('Impossible d\'accéder au microphone: ' + error.message);
+            }
+        }
+
+        function stopMobileRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            }
+        }
+
         function toggleRecording() {
-            if (!recognition) {
-                alert('La reconnaissance vocale n\'est pas supportée par votre navigateur.');
+            // Sur iOS/mobile, utiliser MediaRecorder + Whisper
+            if (isIOS || !recognition) {
+                if (isRecording) {
+                    stopMobileRecording();
+                } else {
+                    startMobileRecording();
+                }
                 return;
             }
 
+            // Sur desktop, utiliser SpeechRecognition
             if (isRecording) {
                 recognition.stop();
             } else {
