@@ -7,201 +7,344 @@ from email.mime.base import MIMEBase
 from email import encoders
 from mistralai import Mistral
 from datetime import datetime
-import edge_tts
-import asyncio
+from gtts import gTTS
+from pydub import AudioSegment
+from pydub.utils import which
 import re
+import tempfile
+from weasyprint import HTML, CSS
+from io import BytesIO
 
-# Charger le fichier .env
+# CHARGEMENT .env
 load_dotenv()
+MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
+GMAIL_USER = os.getenv('GMAIL_USER')
+GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD')
+SPEED = float(os.getenv('SPEED', 0.8))  # 🔥 NOUVEAU : Vitesse 0.8x
 
-# Charger les variables d'environnement
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-GMAIL_USER = os.getenv("GMAIL_USER")
-GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
+print("🚀 API Key chargée...")
+print(f"🔊 Vitesse TTS: {SPEED}x")
 
-# Vérification des clés
+# VÉRIFICATION CLÉS
 if not MISTRAL_API_KEY:
-    raise ValueError("MISTRAL_API_KEY n'est pas définie")
+    raise ValueError("MISTRAL_API_KEY n'est pas définie dans les variables d'environnement")
 if not GMAIL_USER or not GMAIL_PASSWORD:
     raise ValueError("GMAIL_USER ou GMAIL_PASSWORD manquant")
+print("- Vérification des clés OK")
 
-# Initialiser le client Mistral
 client = Mistral(api_key=MISTRAL_API_KEY)
 
-def generate_greek_dialogue():
-    prompt = """
-    Crée un dialogue en grec moderne (niveau B2) entre Stephanos et Anna, sur un sujet de la vie quotidienne en Grèce.
-    Le dialogue doit faire environ une page A4 (environ 500 mots).
-    
-    FORMAT REQUIS :
-    - Chaque réplique doit commencer par le nom du personnage suivi de " : "
-    - Exemple : "Stephanos: Καλημέρα, Άννα!"
-    - Exemple : "Anna: Γεια σου, Στέφανε!"
-    
-    À la fin, ajoute une section VOCABULAIRE avec les règles suivantes :
-    
-    RÈGLES POUR LE VOCABULAIRE :
-    1. **Pas de doublons** : Chaque mot ne doit apparaître qu'une seule fois dans la liste
-    2. **Format pour les verbes** : Présente-les sous la forme "présent_indicatif / aoriste"
-       Exemple : "αγοράζω / αγόρασα" (acheter)
-    3. **Format pour les autres mots** : mot grec → traduction française
-    4. **Phrase d'exemple** : Pour chaque mot, donne une phrase d'exemple en grec avec sa traduction
-    5. **Organisation** : Utilise des balises HTML (<strong>texte</strong>) et des listes (<ul><li>...</li></ul>)
-    
-    EXEMPLE DE FORMAT POUR LE VOCABULAIRE :
-    
-    <h3>Vocabulaire</h3>
-    <ul>
-        <li><strong>αγοράζω / αγόρασα</strong> (acheter)
-            <br>Exemple : Αγόρασα φρούτα από την αγορά. (J'ai acheté des fruits au marché.)</li>
-        <li><strong>η αγορά</strong> (le marché)
-            <br>Exemple : Η αγορά είναι ανοιχτή κάθε Σάββατο. (Le marché est ouvert chaque samedi.)</li>
-    </ul>
-    
-    Sujet : {sujet}
-    """
+def generategreekdialogue(sujet):
+    """Génère dialogue grec B2 avec Mistral"""
+    prompt = f"""Crée un dialogue en grec moderne niveau B2 entre Stephanos et Anna, sur le sujet suivant : {sujet}
 
-    sujets = [
-        "Les courses au marché", "Un dîner en famille",
-        "Une sortie au cinéma", "Un problème de voisinage",
-        "Un voyage en bus", "Une discussion sur la météo"
-    ]
-    sujet = sujets[datetime.now().day % len(sujets)]
+Le dialogue doit faire environ une page A4 (~500 mots).
 
-    chat_response = client.chat.complete(
+FORMATAGE DU DIALOGUE :
+- Commence par un titre en grec en rapport avec le sujet du dialogue, au format <h3>Titre en grec</h3>
+- Exemple : <h3>Οι αγορές στην αγορά</h3> ou <h3>Ένα δείπνο με την οικογένεια</h3>
+- Ensuite, chaque réplique doit être dans une balise <p> séparée
+- Format : <p><strong>Nom du personnage</strong> : texte de la réplique</p>
+- Exemple : <p><strong>Στέφανος</strong> : Γεια σου Άννα!</p>
+- Chaque réplique dans son propre paragraphe <p> pour créer un retour à la ligne automatique
+
+VOCABULAIRE : Après le dialogue, ajoute une section "Λεξιλόγιο" avec un tableau HTML.
+Le tableau doit avoir 3 colonnes :
+- Colonne 1 : Mot en grec (en gras)
+- Colonne 2 : Traduction en français  
+- Colonne 3 : Phrase d'exemple en grec
+
+Utilise ce format de tableau :
+<table class="vocab-table">
+<thead>
+<tr><th>Ελληνικά</th><th>Français</th><th>Παράδειγμα</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>αγορά</strong></td><td>marché</td><td>Πάω στην αγορά κάθε Σάββατο.</td></tr>
+</tbody>
+</table>
+
+Assure-toi que le vocabulaire contient environ 20-25 mots clés du dialogue."""
+
+    print("🤖 Utilisation de la méthode chat.complete...")
+    chatresponse = client.chat.complete(
         model="mistral-small-latest",
         messages=[{"role": "user", "content": prompt.format(sujet=sujet)}]
     )
+    return chatresponse.choices[0].message.content
 
-    return chat_response.choices[0].message.content
+def extracttitle(htmlcontent):
+    """Extrait le titre du dialogue depuis la balise h3"""
+    title_pattern = r'<h3>(.*?)</h3>'
+    match = re.search(title_pattern, htmlcontent, re.IGNORECASE | re.DOTALL)
+    if match:
+        title = re.sub(r'<.*?>', '', match.group(1)).strip()
+        return title
+    return None
 
-async def generate_audio_with_voices(dialogue_text, speed_rate=0.8):
-    """
-    Génère un fichier audio avec des voix différentes pour chaque personnage
-    speed_rate: vitesse de lecture (0.5 = très lent, 1.0 = normal, 2.0 = rapide)
-    """
-    # Extraire les répliques du dialogue
-    lines = dialogue_text.split('\n')
-    dialogue_lines = []
+def extractdialoguelines(htmlcontent):
+    """Extrait les répliques du dialogue HTML et retourne une liste de tuples (speaker, text)"""
+    dialoguelines = []
+    # Pattern pour extraire les répliques : <p><strong>Nom</strong> : texte</p>
+    pattern = r'<p><strong>([^<]+)</strong>\s*:?\s*(.*?)</p>'
+    matches = re.findall(pattern, htmlcontent, re.IGNORECASE | re.DOTALL)
     
-    for line in lines:
-        # Chercher les lignes avec "Stephanos:" ou "Anna:"
-        if 'Stephanos:' in line or 'Στέφανος:' in line:
-            text = re.sub(r'^.*?:', '', line).strip()
-            dialogue_lines.append(('stephanos', text))
-        elif 'Anna:' in line or 'Άννα:' in line:
-            text = re.sub(r'^.*?:', '', line).strip()
-            dialogue_lines.append(('anna', text))
+    for speaker, text in matches:
+        # Nettoyer le texte des balises HTML résiduelles
+        cleantext = re.sub(r'<.*?>', '', text).strip()
+        # Normaliser les noms pour la comparaison
+        speakernormalized = "Stephanos" if "ΣΤΕΦΑΝΟΣ" in speaker.upper() or "ΣΤΕΦΑΝΟΣ" in speaker.upper() else "Anna"
+        dialoguelines.append((speakernormalized, cleantext))
     
-    # Configuration des voix
-    voices = {
-        'stephanos': 'el-GR-NestorasNeural',  # Voix masculine
-        'anna': 'el-GR-AthinaNeural'          # Voix féminine
-    }
+    return dialoguelines
+
+def generateaudiofromdialogue(dialoguelines, outputfile="dialogue.mp3"):
+    """🔥 gTTS AMÉLIORÉ : vitesse 0.8x + voix Anna/Stephanos différenciées"""
+    if not dialoguelines:
+        print("Aucune réplique trouvée dans le dialogue")
+        return None
     
-    # Convertir le taux de vitesse en format SSML
-    # rate: -50% à +100% (0.5 = -50%, 1.0 = 0%, 2.0 = +100%)
-    rate_percent = f"{int((speed_rate - 1) * 100)}%"
+    print(f"- Génération gTTS amélioré ({len(dialoguelines)} répliques, {SPEED}x)...")
+    audiosegments = []
     
-    # Générer des fichiers audio temporaires
-    temp_files = []
-    for i, (speaker, text) in enumerate(dialogue_lines):
-        if not text.strip():
-            continue
-            
-        output_file = f"temp_audio_{i}.mp3"
-        voice = voices[speaker]
-        
-        # Créer le texte SSML avec contrôle de vitesse
-        ssml_text = f'<speak><prosody rate="{rate_percent}">{text}</prosody></speak>'
-        
-        communicate = edge_tts.Communicate(ssml_text, voice)
-        await communicate.save(output_file)
-        temp_files.append(output_file)
+    with tempfile.TemporaryDirectory() as tempdir:
+        for i, (speaker, text) in enumerate(dialoguelines):
+            try:
+                # gTTS grec + slow=True (base ~0.8x)
+                tts = gTTS(text=text, lang='el', slow=True)
+                tempfile_path = os.path.join(tempdir, f"temp_{i}.mp3")
+                tts.save(tempfile_path)
+                
+                audio = AudioSegment.from_mp3(tempfile_path)
+                
+                # 🔥 VOIX DIFFÉRENCIÉES (mieux que l'original)
+                if speaker == "Stephanos":
+                    # Masculin: voix GRAVE + lent
+                    audio = audio._spawn(audio.raw_data, overrides={
+                        "frame_rate": int(audio.frame_rate * 0.85)
+                    }).set_frame_rate(audio.frame_rate)
+                    audio = audio.speedup(playback_speed=0.92, chunk_size=150, crossfade=25)
+                else:  # Anna
+                    # Féminin: voix AIGUË + naturel
+                    audio = audio._spawn(audio.raw_data, overrides={
+                        "frame_rate": int(audio.frame_rate * 1.18)
+                    }).set_frame_rate(audio.frame_rate)
+                    audio = audio.speedup(playback_speed=1.02, chunk_size=150, crossfade=25)
+                
+                # 🔥 VITESSE FINALE 0.8x uniforme (configurable via .env)
+                audio = audio.speedup(playback_speed=1/float(SPEED), chunk_size=200, crossfade=30)
+                
+                audiosegments.append(audio)
+                
+                # Pause 1s entre répliques (amélioré)
+                pause = AudioSegment.silent(duration=1000)
+                audiosegments.append(pause)
+                
+                print(f"  ✓ Réplique {i+1}/{len(dialoguelines)} - {speaker} ({len(text)} chars)")
+                
+            except Exception as e:
+                print(f"  ✗ Erreur réplique {i+1} ({speaker}): {e}")
+                continue
     
-    # Fusionner tous les fichiers audio
-    # Note: pour une fusion simple, on peut utiliser pydub
+    if not audiosegments:
+        print("Aucun segment audio généré")
+        return None
+    
+    # Assemblage final
+    print("- 🎵 Assemblage audio final...")
+    final_audio = sum(audiosegments)
+    final_audio.export(outputfile, format="mp3")
+    duration = len(final_audio) / 1000
+    print(f"✅ Audio prêt: {outputfile} ({duration:.1f}s)")
+    return outputfile
+
+def generatepdffromdialogue(htmlcontent, title=None, outputfile="dialoguegrec.pdf"):
+    """Génère un fichier PDF stylisé partir du dialogue HTML"""
+    print("- 📄 Génération du PDF...")
+    pdftitle = title if title else "Dialogue en grec moderne"
+    
+    pdfhtml = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{pdftitle}</title>
+    <style>
+        @page {{ size: A4; margin: 1.5cm; }}
+        body {{ font-family: Arial, Helvetica, sans-serif; line-height: 1.4; color: #333; font-size: 11pt; }}
+        .header {{ text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #3498db; }}
+        .header h1 {{ color: #2c3e50; font-size: 20px; margin: 5px 0; }}
+        .header .date {{ color: #7f8c8d; font-size: 11px; }}
+        .dialogue {{ background-color: #f9f9f9; padding: 12px; border-radius: 5px; margin-bottom: 15px; }}
+        .dialogue h3 {{ color: #34495e; margin-top: 0; margin-bottom: 12px; font-size: 16px; }}
+        .dialogue p {{ margin: 6px 0; font-size: 11pt; }}
+        .dialogue strong {{ color: #2c3e50; font-weight: bold; }}
+        .vocab-section {{ margin-top: 15px; }}
+        .vocab-section h3 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; font-size: 16px; margin-bottom: 10px; }}
+        .vocab-table {{ width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11pt; }}
+        .vocab-table th {{ background-color: #3498db; color: white; padding: 4px 4px; text-align: left; font-weight: bold; font-size: 11pt; }}
+        .vocab-table td {{ border: 1px solid #ddd; padding: 3px 4px; vertical-align: top; line-height: 1.3; }}
+        .vocab-table tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        .vocab-table td:first-child {{ font-weight: bold; color: #2c3e50; width: 18%; }}
+        .vocab-table td:nth-child(2) {{ width: 22%; }}
+        .vocab-table td:nth-child(3) {{ width: 60%; }}
+        .footer {{ margin-top: 20px; padding-top: 10px; border-top: 1px solid #ecf0f1; text-align: center; color: #7f8c8d; font-size: 11pt; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{pdftitle}</h1>
+        <div class="date">{datetime.now().strftime('%d/%m/%Y')}</div>
+    </div>
+    <div class="dialogue">
+        {htmlcontent}
+    </div>
+</body>
+</html>"""
+    
     try:
-        from pydub import AudioSegment
-        
-        combined = AudioSegment.empty()
-        for file in temp_files:
-            audio = AudioSegment.from_mp3(file)
-            combined += audio
-            # Ajouter une pause de 500ms entre les répliques
-            combined += AudioSegment.silent(duration=500)
-        
-        output_path = "dialogue_grec.mp3"
-        combined.export(output_path, format="mp3")
-        
-        # Nettoyer les fichiers temporaires
-        for file in temp_files:
-            if os.path.exists(file):
-                os.remove(file)
-        
-        return output_path
-    except ImportError:
-        # Si pydub n'est pas disponible, retourner juste le premier fichier
-        print("pydub non installé, impossible de fusionner les audios")
-        if temp_files:
-            os.rename(temp_files[0], "dialogue_grec.mp3")
-            return "dialogue_grec.mp3"
+        HTML(string=pdfhtml).write_pdf(outputfile)
+        filesize = os.path.getsize(outputfile) / 1024
+        print(f"✅ PDF généré: {outputfile} ({filesize:.1f} KB)")
+        return outputfile
+    except Exception as e:
+        print(f"❌ Erreur lors de la génération du PDF: {e}")
         return None
 
-def send_email_with_audio(content, audio_file=None):
+def sendemail(content, audiofile=None, pdffile=None, title=None):
+    """Envoie l'email avec les pièces jointes"""
+    recipients = ["eminet666@gmail.com", "anne.lafond@ensaama.net"]
     msg = MIMEMultipart()
-    msg["From"] = GMAIL_USER
-    msg["To"] = "eminet666@gmail.com"
-    msg["Subject"] = "Ton dialogue grec quotidien 🇬🇷"
-
-    html_content = f"""
-    <html>
-        <head>
-            <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
-                h2 {{ color: #2c3e50; }}
-                .dialogue {{ background-color: #f9f9f9; padding: 15px; border-radius: 5px; }}
-            </style>
-        </head>
-        <body>
-            <h2>Dialogue en grec moderne 🎧</h2>
-            <p>📎 Le fichier audio est en pièce jointe (vitesse ralentie à 80%)</p>
-            <div class="dialogue">
-                {content}
-            </div>
-        </body>
-    </html>
-    """
-
-    msg.attach(MIMEText(html_content, "html", "utf-8"))
-
-    # Attacher le fichier audio
-    if audio_file and os.path.exists(audio_file):
-        with open(audio_file, "rb") as f:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(f.read())
-        
-        encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition",
-            f"attachment; filename= dialogue_grec.mp3",
-        )
-        msg.attach(part)
-
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+    msg['From'] = GMAIL_USER
+    msg['To'] = ", ".join(recipients)
+    
+    if title:
+        msg['Subject'] = f"{title} - Dialogue grec quotidien"
+    else:
+        msg['Subject'] = "Ton dialogue grec quotidien"
+    
+    emailtitle = f"{title}" if title else "Dialogue en grec moderne"
+    
+    attachmentsinfo = []
+    if audiofile:
+        attachmentsinfo.append("Fichier audio 🎵 (pour améliorer ta prononciation)")
+    if pdffile:
+        attachmentsinfo.append("PDF 📄 (à imprimer ou conserver)")
+    
+    attachmentshtml = ""
+    if attachmentsinfo:
+        attachmentshtml = f"""
+        <div class="audio-notice">
+            <strong>Pièces jointes incluses :</strong><br><br>
+            {'<br>'.join(attachmentsinfo)}
+        </div>"""
+    
+    htmlcontent = f"""<html>
+<head>
+<style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.5; max-width: 800px; margin: 0 auto; padding: 15px; font-size: 14px; }}
+    h2 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; margin-bottom: 12px; font-size: 20px; }}
+    h3 {{ color: #34495e; margin-top: 15px; margin-bottom: 10px; font-size: 16px; }}
+    .audio-notice {{ background-color: #e8f4f8; padding: 10px; border-radius: 4px; margin: 12px 0; font-size: 12px; }}
+    .dialogue {{ background-color: #f9f9f9; padding: 12px; border-radius: 5px; }}
+    .dialogue p {{ margin: 6px 0; }}
+    .vocab-table {{ border-collapse: collapse; width: 100%; margin-top: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 14px; }}
+    .vocab-table th {{ background-color: #3498db; color: white; padding: 5px 4px; text-align: left; font-weight: bold; font-size: 14px; }}
+    .vocab-table td {{ border: 1px solid #ddd; padding: 4px 5px; text-align: left; vertical-align: top; line-height: 1.3; }}
+    .vocab-table tr:nth-child(even) {{ background-color: #f9f9f9; }}
+    .vocab-table tr:hover {{ background-color: #e8f4f8; }}
+    .vocab-table td:first-child {{ width: 18%; }}
+    .vocab-table td:nth-child(2) {{ width: 22%; }}
+    .vocab-table td:nth-child(3) {{ width: 60%; }}
+</style>
+</head>
+<body>
+    <h2>{emailtitle}</h2>
+    {attachmentshtml}
+    <div class="dialogue">
+        {content}
+    </div>
+</body>
+</html>"""
+    
+    msg.attach(MIMEText(htmlcontent, 'html', 'utf-8'))
+    
+    # Audio
+    if audiofile and os.path.exists(audiofile):
+        try:
+            with open(audiofile, 'rb') as attachment:
+                part = MIMEBase('audio', 'mpeg')
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            filename = f"dialoguegrec_{datetime.now().strftime('%Y%m%d')}.mp3"
+            part.add_header('Content-Disposition', f'attachment; filename= {filename}')
+            msg.attach(part)
+            print(f"📎 Fichier audio attaché: {filename}")
+        except Exception as e:
+            print(f"Erreur lors de l'attachement du fichier audio: {e}")
+    
+    # PDF
+    if pdffile and os.path.exists(pdffile):
+        try:
+            with open(pdffile, 'rb') as attachment:
+                part = MIMEBase('application', 'pdf')
+                part.set_payload(attachment.read())
+            encoders.encode_base64(part)
+            filename = f"dialoguegrec_{datetime.now().strftime('%Y%m%d')}.pdf"
+            part.add_header('Content-Disposition', f'attachment; filename= {filename}')
+            msg.attach(part)
+            print(f"📎 Fichier PDF attaché: {filename}")
+        except Exception as e:
+            print(f"Erreur lors de l'attachement du fichier PDF: {e}")
+    
+    # ENVOI
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
         server.starttls()
         server.login(GMAIL_USER, GMAIL_PASSWORD)
         server.send_message(msg)
+    print("📧 Email envoyé avec audio et PDF en pièces jointes!")
 
 if __name__ == "__main__":
-    dialogue = generate_greek_dialogue()
+    # Sujets quotidiens
+    sujets = [
+        "Les courses au marché",
+        "Un dîner en famille", 
+        "Une sortie au cinéma",
+        "Un problème de voisinage",
+        "Un voyage en bus",
+        "Une discussion sur la météo"
+    ]
+    sujet = sujets[datetime.now().day % len(sujets)]
+    print(f"📖 Sujet du jour: {sujet}")
     
-    # Générer l'audio avec des voix différentes et vitesse ralentie
-    audio_file = asyncio.run(generate_audio_with_voices(dialogue, speed_rate=0.8))
+    # 1. GÉNÉRATION DIALOGUE
+    dialogue = generategreekdialogue(sujet)
+    print("✅ Dialogue généré")
     
-    # Envoyer l'email avec l'audio en pièce jointe
-    send_email_with_audio(dialogue, audio_file)
+    # 2. EXTRACTION TITRE
+    title = extracttitle(dialogue)
+    if title:
+        print(f"📛 Titre extrait: {title}")
     
-    # Nettoyer le fichier audio
-    if audio_file and os.path.exists(audio_file):
-        os.remove(audio_file)
+    # 3. EXTRACTION RÉPLIQUES
+    dialoguelines = extractdialoguelines(dialogue)
+    print(f"💬 {len(dialoguelines)} répliques extraites")
+    
+    # 4. AUDIO AMÉLIORÉ 🔥
+    audiofile = None
+    if dialoguelines:
+        audiofile = generateaudiofromdialogue(dialoguelines, "dialoguegrec.mp3")
+    
+    # 5. PDF
+    pdffile = generatepdffromdialogue(dialogue, title, "dialoguegrec.pdf")
+    
+    # 6. EMAIL
+    sendemail(dialogue, audiofile, pdffile, title)
+    print("🎉 MISSION TERMINÉE!")
+    
+    # Nettoyage
+    if audiofile and os.path.exists(audiofile):
+        os.remove(audiofile)
+        print("🧹 Fichier audio local nettoyé")
+    if pdffile and os.path.exists(pdffile):
+        os.remove(pdffile)
+        print("🧹 Fichier PDF local nettoyé")
