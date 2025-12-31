@@ -1,5 +1,7 @@
 ## grecbot
-x
+
+
+
 
 ### appli
 * [grecbot](https://grecbot.onrender.com/)
@@ -16,3 +18,6 @@ x
 * eminet666 : [github](https://github.com/eminet666/eminet_IA/tree/main/IA_agent/grecbot)
 * eminet666 : [hugging face](https://huggingface.co/)
 * etienne.minet : [groq](https://console.groq.com/keys)
+
+### conversation claude
+* [tuto](./claude_conversation.md)
