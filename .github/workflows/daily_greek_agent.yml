@@ -2,25 +2,29 @@ name: Daily Greek Learning Agent
 
 on:
   schedule:
-    - cron: "0 5 * * *"
-  workflow_dispatch:
+    - cron: "0 5 * * *"  # Exécution à 6h du matin (heure de Paris)
+  workflow_dispatch:  # Permet de déclencher manuellement le workflow
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
+      
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      
       - name: Install dependencies
         run: pip install python-dotenv mistralai edge-tts pydub
+      
       - name: Run agent
         env:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
-        run: python greek_learning_agent.py
+        run: python IA_agent/grecAgent/greek_learning_agent.py

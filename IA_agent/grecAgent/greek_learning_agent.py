@@ -38,8 +38,26 @@ def generate_greek_dialogue():
     - Exemple : "Stephanos: Καλημέρα, Άννα!"
     - Exemple : "Anna: Γεια σου, Στέφανε!"
     
-    À la fin, ajoute une liste de vocabulaire avec les mots en grec, leur traduction en français et une phrase d'exemple pour chaque mot.
-    Utilise des balises HTML pour le gras (<strong>texte</strong>) et des listes à puces (<ul><li>...</li></ul>).
+    À la fin, ajoute une section VOCABULAIRE avec les règles suivantes :
+    
+    RÈGLES POUR LE VOCABULAIRE :
+    1. **Pas de doublons** : Chaque mot ne doit apparaître qu'une seule fois dans la liste
+    2. **Format pour les verbes** : Présente-les sous la forme "présent_indicatif / aoriste"
+       Exemple : "αγοράζω / αγόρασα" (acheter)
+    3. **Format pour les autres mots** : mot grec → traduction française
+    4. **Phrase d'exemple** : Pour chaque mot, donne une phrase d'exemple en grec avec sa traduction
+    5. **Organisation** : Utilise des balises HTML (<strong>texte</strong>) et des listes (<ul><li>...</li></ul>)
+    
+    EXEMPLE DE FORMAT POUR LE VOCABULAIRE :
+    
+    <h3>Vocabulaire</h3>
+    <ul>
+        <li><strong>αγοράζω / αγόρασα</strong> (acheter)
+            <br>Exemple : Αγόρασα φρούτα από την αγορά. (J'ai acheté des fruits au marché.)</li>
+        <li><strong>η αγορά</strong> (le marché)
+            <br>Exemple : Η αγορά είναι ανοιχτή κάθε Σάββατο. (Le marché est ouvert chaque samedi.)</li>
+    </ul>
+    
     Sujet : {sujet}
     """
 
