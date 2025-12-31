@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Σωκράτης 2.0 - Φιλοσοφικές Συνομιλίες</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #100666 0%, #270874 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6674ea 0%, #6674ea 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 0;
+        }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+
+        .message-text {
+            margin-bottom: 8px;
+        }
+
+        .vocab-word {
+            cursor: pointer;
+            position: relative;
+            border-bottom: 2px dotted #667eea;
+            transition: all 0.2s;
+        }
+
+        .vocab-word:hover {
+            color: #667eea;
+            border-bottom-color: #764ba2;
+        }
+
+        .vocab-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: normal;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .vocab-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 15px;
+            border: 6px solid transparent;
+            border-top-color: #2c3e50;
+        }
+
+        .vocab-word.show-tooltip .vocab-tooltip {
+            opacity: 1;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-icon {
+            padding: 4px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.2s;
+            line-height: 1;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background: rgba(102, 126, 234, 0.15);
+            transform: scale(1.15);
+        }
+
+        .btn-icon:active {
+            transform: scale(0.95);
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #userInput:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        #sendBtn {
+            background: linear-gradient(135deg, #100666 0%, #270874 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 22px;
+        }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-mic {
+            background: #ff4444;
+            border: none;
+            color: white;
+            font-size: 20px;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-mic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(255, 68, 68, 0.4);
+        }
+
+        .btn-mic.recording {
+            background: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-mic.recording:hover {
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .loading {
+            display: none;
+            padding: 12px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 5px;
+        }
+
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .loading-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        .translation {
+            margin-top: 8px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 18px;
+            font-style: italic;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🇬🇷 Σωκράτης 2.0</h1>
+        </div>
+
+        <div class="chat-box" id="chatBox"></div>
+
+        <div class="loading" id="loading">
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <button id="micBtn" class="btn-mic" title="Πατήστε για να μιλήσετε">🎤</button>
+            <input type="text" id="userInput" placeholder="Γράψε ή μίλα..." autocomplete="off">
+            <button id="sendBtn" title="Envoyer le message">➤</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const micBtn = document.getElementById('micBtn');
+        const loading = document.getElementById('loading');
+
+        const SPEECH_RATE = 0.8;
+        let recognition = null;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+
+        // Détecter iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        // Initialiser la reconnaissance vocale (desktop uniquement)
+        if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'el-GR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                userInput.value = transcript;
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                sendMessage();
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Erreur reconnaissance vocale:', event.error);
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                if (event.error === 'no-speech') {
+                    alert('Aucune parole détectée. Réessayez.');
+                }
+            };
+
+            recognition.onend = function () {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            };
+        }
+
+        async function startMobileRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Utiliser un format compatible
+                const options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/mp4';
+                }
+
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = function (event) {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async function () {
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+
+                    // Convertir en base64
+                    const reader = new FileReader();
+                    reader.onloadend = async function () {
+                        const base64Audio = reader.result;
+
+                        try {
+                            // Envoyer au serveur pour transcription
+                            const response = await fetch('/transcribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ audio: base64Audio })
+                            });
+
+                            const data = await response.json();
+
+                            if (data.success) {
+                                userInput.value = data.text;
+                                sendMessage();
+                            } else {
+                                alert('Erreur de transcription: ' + (data.error || 'Inconnu'));
+                            }
+                        } catch (error) {
+                            console.error('Transcription error:', error);
+                            alert('Erreur lors de la transcription');
+                        }
+                    };
+                    reader.readAsDataURL(audioBlob);
+
+                    // Arrêter le stream
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+
+            } catch (error) {
+                console.error('Erreur micro:', error);
+                alert('Impossible d\'accéder au microphone: ' + error.message);
+            }
+        }
+
+        function stopMobileRecording() {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            }
+        }
+
+        function toggleRecording() {
+            // Sur iOS/mobile, utiliser MediaRecorder + Whisper
+            if (isIOS || !recognition) {
+                if (isRecording) {
+                    stopMobileRecording();
+                } else {
+                    startMobileRecording();
+                }
+                return;
+            }
+
+            // Sur desktop, utiliser SpeechRecognition
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+            }
+        }
+
+        function addMessage(content, isUser, vocabulary) {
+            vocabulary = vocabulary || [];
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'message user' : 'message bot';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message-text';
+
+            // Si c'est un message du bot avec vocabulaire
+            if (!isUser && vocabulary.length > 0) {
+                const words = content.split(/\s+/);
+                const vocabMap = new Map();
+                vocabulary.forEach(function (v) {
+                    vocabMap.set(v.word.toLowerCase(), v.translation);
+                });
+
+                words.forEach(function (word, index) {
+                    const cleanWord = word.replace(/[.,;:!?""]/g, '').toLowerCase();
+
+                    if (vocabMap.has(cleanWord)) {
+                        const vocabSpan = document.createElement('span');
+                        vocabSpan.className = 'vocab-word';
+                        vocabSpan.textContent = word;
+
+                        const tooltip = document.createElement('span');
+                        tooltip.className = 'vocab-tooltip';
+                        tooltip.textContent = vocabMap.get(cleanWord);
+                        vocabSpan.appendChild(tooltip);
+
+                        vocabSpan.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            document.querySelectorAll('.vocab-word.show-tooltip').forEach(function (w) {
+                                if (w !== vocabSpan) w.classList.remove('show-tooltip');
+                            });
+                            vocabSpan.classList.toggle('show-tooltip');
+                        });
+
+                        textDiv.appendChild(vocabSpan);
+                    } else {
+                        textDiv.appendChild(document.createTextNode(word));
+                    }
+
+                    if (index < words.length - 1) {
+                        textDiv.appendChild(document.createTextNode(' '));
+                    }
+                });
+            } else {
+                textDiv.textContent = content;
+            }
+
+            contentDiv.appendChild(textDiv);
+
+            // Boutons pour le bot
+            if (!isUser) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'message-actions';
+
+                const speakBtn = document.createElement('button');
+                speakBtn.className = 'btn-icon';
+                speakBtn.textContent = '🔊';
+                speakBtn.title = 'Écouter';
+                speakBtn.onclick = function () { speakText(content); };
+
+                const translateBtn = document.createElement('button');
+                translateBtn.className = 'btn-icon';
+                translateBtn.textContent = '🇫🇷';
+                translateBtn.title = 'Traduire en français';
+                translateBtn.onclick = function () { translateText(content, messageDiv); };
+
+                actionsDiv.appendChild(speakBtn);
+                actionsDiv.appendChild(translateBtn);
+                contentDiv.appendChild(actionsDiv);
+            }
+
+            messageDiv.appendChild(contentDiv);
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+
+                // Nettoyer le texte des emojis et caractères spéciaux qui posent problème
+                const cleanText = text.replace(/[🔊🇫🇷🎤➤😉!.…]/g, ' ').trim();
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'el-GR';
+                utterance.rate = SPEECH_RATE;
+                utterance.pitch = 0.8; // Voix plus grave (Socrate !)
+                utterance.volume = 1;
+
+                // Sur iOS, attendre que les voix soient chargées
+                if (window.speechSynthesis.getVoices().length === 0) {
+                    window.speechSynthesis.onvoiceschanged = function () {
+                        const voices = window.speechSynthesis.getVoices();
+                        // Chercher une voix masculine grecque en priorité
+                        let greekVoice = voices.find(v => v.lang.startsWith('el') && v.name.toLowerCase().includes('male'));
+                        if (!greekVoice) {
+                            greekVoice = voices.find(v => v.lang.startsWith('el'));
+                        }
+                        if (greekVoice) {
+                            utterance.voice = greekVoice;
+                        }
+                        window.speechSynthesis.speak(utterance);
+                    };
+                } else {
+                    const voices = window.speechSynthesis.getVoices();
+                    // Chercher une voix masculine grecque en priorité
+                    let greekVoice = voices.find(v => v.lang.startsWith('el') && v.name.toLowerCase().includes('male'));
+                    if (!greekVoice) {
+                        greekVoice = voices.find(v => v.lang.startsWith('el'));
+                    }
+                    if (greekVoice) {
+                        utterance.voice = greekVoice;
+                        console.log('Voix sélectionnée:', greekVoice.name);
+                    }
+                    window.speechSynthesis.speak(utterance);
+                }
+            } else {
+                alert('Synthèse vocale non supportée.');
+            }
+        }
+
+        async function translateText(text, messageElement) {
+            const existingTranslation = messageElement.querySelector('.translation');
+            if (existingTranslation) {
+                existingTranslation.remove();
+                return;
+            }
+
+            try {
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const translationDiv = document.createElement('div');
+                    translationDiv.className = 'translation';
+                    translationDiv.textContent = data.translation;
+                    messageElement.appendChild(translationDiv);
+                } else {
+                    alert('Erreur de traduction');
+                }
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
+
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            if (show) {
+                chatBox.appendChild(loading);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            userInput.value = '';
+            sendBtn.disabled = true;
+            showLoading(true);
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.success) {
+                    const cleanResponse = String(data.response || '').trim();
+                    const cleanVocabulary = Array.isArray(data.vocabulary) ? data.vocabulary : [];
+                    addMessage(cleanResponse, false, cleanVocabulary);
+                } else {
+                    addMessage('Σφάλμα: ' + (data.error || 'Κάτι πήγε στραβά'), false);
+                }
+            } catch (error) {
+                showLoading(false);
+                console.error('Error:', error);
+                addMessage('Σφάλμα σύνδεσης: ' + error.message, false);
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Fermer tooltips en cliquant ailleurs
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.vocab-word.show-tooltip').forEach(function (w) {
+                w.classList.remove('show-tooltip');
+            });
+        });
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        micBtn.addEventListener('click', toggleRecording);
+
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+
+        // Message de bienvenue
+        window.addEventListener('DOMContentLoaded', function () {
+            addMessage('Χαίρε! Είμαι ο Σωκράτης 2.0, και ναι, ακόμα φοράω σανδάλια. Πώς θα μπορούσα να σε βοηθήσω σήμερα; Ή μήπως πρώτα θα έπρεπε να ρωτήσω: τι σημαίνει βοήθεια για σένα;', false, []);
+        });
+
+        userInput.focus();
+    </script>   
+</body>
+
+</html>

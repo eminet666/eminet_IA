@@ -1,10 +1,1 @@
 https://grecbot.onrender.com/
-
-Ne joue pas le son correctement : pas la bonne voix, ni le bon texte
-traduction même corps avec mots soulignés
-texte sans le gras, seulement souligné
-
-
-
-
-192.168.1.101
