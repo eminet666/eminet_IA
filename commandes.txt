@@ -1,0 +1,26 @@
+current
+python generate_map.py POI_samos_new.csv map_samos_new.html
+python generate_map.py POI_chios_new.csv map_chios_new.html
+
+
+annulation de push : 
+git reset --hard HEAD~2 (revient à 2 commits en avant mais supprime les fichiers)
+git push origin main --force
+
+interpreteur python utilisé
+Ctrl + Shift + P
+→ Python: Select Interpreter
+
+Version
+nom-package --version
+
+liste des packages
+python -m pip list > packages.txt
+
+test imports fichiers python : 
+python test_py_imports.py ./IA_agent/grecbot/app.py
+python test_py_imports.py ./IA_agent/grecbot/app_voice_ios.py
+
+test imports fichier yml : (sinon lire directement le fichier ;-)
+
+python test_yml_imports.py ./IA_agent/grecB2_new/daily_greek_agent.yml

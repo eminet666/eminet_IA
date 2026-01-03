@@ -1,0 +1,17 @@
+Nom,Ile,Categorie,Latitude,Longitude,Lumiere idéale,Remarques
+Emporios antique,Chios,Archeologie,38.2142,25.9771,Matin,"Site antique près de la plage"
+Kastro de Chios,Chios,Archeologie,38.3699,26.1365,Matin,"Ville fortifiée principale" :contentReference[oaicite:1]{index=1}
+Mesta,Chios,Archeologie,38.2370,25.9710,Matin,"Village médiéval fortifié"
+Pyrgi,Chios,Archeologie,38.2326,25.9884,Matin,"Village aux façades xysta"
+Nea Moni,Chios,Eglise,38.3416,26.0874,Matin,"Monastère UNESCO"
+Agioi Apostoloi (Pyrgi),Chios,Eglise,38.2300,25.9890,Matin,"Église byzantine proche centre"
+Panagia Krina,Chios,Eglise,38.3050,26.0990,Matin,"Église rurale typique"
+Panagia Vrondiani,Chios,Eglise,38.3774,26.1451,Matin,"Monastère calme"
+Agia Dynami,Chios,Chapelle,38.1745,26.0201,Soir,"Chapelle sud proche mer"
+Chapelle Mavra Volia,Chios,Chapelle,38.2157,25.9774,Matin,"Chapelle près de plage volcanique"
+Agios Isidoros (Kambiá),Chios,Eglise,38.5901,26.0389,Matin,"Église villageoise nord" :contentReference[oaicite:2]{index=2}
+Agios Markos (Kardamyla),Chios,Eglise,38.3562,26.2246,Matin,"Église notable du nord" :contentReference[oaicite:3]{index=3}
+Panagia Myrtidiotissa (Myrsini),Chios,Chapelle,38.3300,26.1000,Soir,"Chapelle rurale nord approx."
+Agios Georgios (Agia Ermioni),Chios,Chapelle,38.3150,26.2000,Soir,"Chapelle littorale nord approx."
+Panagia Sikelia (Potamia),Chios,Chapelle,38.3160,26.0420,Matin,"Chapelle rurale nord approx."
+Agios Galas (Agios Galas),Chios,Chapelle,38.2800,26.1150,Soir,"Proche rivage nord approx."

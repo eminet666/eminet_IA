@@ -90,7 +90,6 @@
         }
 
         .vocab-word {
-            font-weight: bold;
             cursor: pointer;
             position: relative;
             border-bottom: 2px dotted #667eea;
@@ -105,8 +104,7 @@
         .vocab-tooltip {
             position: absolute;
             bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 0;
             background: #2c3e50;
             color: white;
             padding: 8px 12px;
@@ -126,8 +124,7 @@
             content: '';
             position: absolute;
             top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 15px;
             border: 6px solid transparent;
             border-top-color: #2c3e50;
         }
@@ -328,9 +325,10 @@
             padding: 10px;
             background: #f0f0f0;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 18px;
             font-style: italic;
             color: #555;
+            line-height: 1.5;
         }
 
         ::-webkit-scrollbar {
@@ -425,65 +423,28 @@
 
         async function startMobileRecording() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        sampleRate: 16000
-                    }
-                });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-                // Détecter le format supporté
-                let mimeType = 'audio/webm;codecs=opus';
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    mimeType = 'audio/webm';
-                }
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    mimeType = 'audio/mp4';
-                }
-                if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    mimeType = 'audio/ogg;codecs=opus';
+                // Utiliser un format compatible
+                const options = { mimeType: 'audio/webm' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options.mimeType = 'audio/mp4';
                 }
 
-                console.log('Using MIME type:', mimeType);
-
-                const options = { mimeType: mimeType };
                 mediaRecorder = new MediaRecorder(stream, options);
                 audioChunks = [];
 
                 mediaRecorder.ondataavailable = function (event) {
-                    if (event.data.size > 0) {
-                        audioChunks.push(event.data);
-                        console.log('Audio chunk:', event.data.size, 'bytes');
-                    }
+                    audioChunks.push(event.data);
                 };
 
                 mediaRecorder.onstop = async function () {
-                    console.log('Recording stopped, chunks:', audioChunks.length);
-
-                    if (audioChunks.length === 0) {
-                        alert('Aucun audio enregistré. Réessayez.');
-                        stream.getTracks().forEach(track => track.stop());
-                        return;
-                    }
-
-                    const audioBlob = new Blob(audioChunks, { type: mimeType });
-                    console.log('Audio blob size:', audioBlob.size, 'bytes');
-
-                    if (audioBlob.size < 1000) {
-                        alert('Audio trop court. Parlez plus longtemps.');
-                        stream.getTracks().forEach(track => track.stop());
-                        return;
-                    }
-
-                    // Afficher un indicateur de chargement
-                    showLoading(true);
+                    const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
 
                     // Convertir en base64
                     const reader = new FileReader();
                     reader.onloadend = async function () {
                         const base64Audio = reader.result;
-                        console.log('Base64 length:', base64Audio.length);
 
                         try {
                             // Envoyer au serveur pour transcription
@@ -493,49 +454,28 @@
                                 body: JSON.stringify({ audio: base64Audio })
                             });
 
-                            showLoading(false);
-
                             const data = await response.json();
-                            console.log('Transcription response:', data);
 
                             if (data.success) {
                                 userInput.value = data.text;
                                 sendMessage();
-                            } else if (data.loading) {
-                                alert('Le modèle se charge. Réessayez dans 20 secondes.');
                             } else {
-                                console.error('Transcription error:', data);
                                 alert('Erreur de transcription: ' + (data.error || 'Inconnu'));
                             }
                         } catch (error) {
-                            showLoading(false);
                             console.error('Transcription error:', error);
-                            alert('Erreur lors de la transcription: ' + error.message);
+                            alert('Erreur lors de la transcription');
                         }
                     };
-
-                    reader.onerror = function (error) {
-                        showLoading(false);
-                        console.error('FileReader error:', error);
-                        alert('Erreur de lecture audio');
-                    };
-
                     reader.readAsDataURL(audioBlob);
 
                     // Arrêter le stream
                     stream.getTracks().forEach(track => track.stop());
                 };
 
-                mediaRecorder.onerror = function (event) {
-                    console.error('MediaRecorder error:', event.error);
-                    alert('Erreur d\'enregistrement: ' + event.error);
-                };
-
-                // Enregistrer des chunks toutes les secondes
-                mediaRecorder.start(1000);
+                mediaRecorder.start();
                 isRecording = true;
                 micBtn.classList.add('recording');
-                console.log('Recording started');
 
             } catch (error) {
                 console.error('Erreur micro:', error);
@@ -659,13 +599,42 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
 
-                const utterance = new SpeechSynthesisUtterance(text);
+                // Nettoyer le texte des emojis et caractères spéciaux qui posent problème
+                const cleanText = text.replace(/[🔊🇫🇷🎤➤😉!.…]/g, ' ').trim();
+
+                const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'el-GR';
                 utterance.rate = SPEECH_RATE;
-                utterance.pitch = 1;
+                utterance.pitch = 0.8; // Voix plus grave (Socrate !)
                 utterance.volume = 1;
 
-                window.speechSynthesis.speak(utterance);
+                // Sur iOS, attendre que les voix soient chargées
+                if (window.speechSynthesis.getVoices().length === 0) {
+                    window.speechSynthesis.onvoiceschanged = function () {
+                        const voices = window.speechSynthesis.getVoices();
+                        // Chercher une voix masculine grecque en priorité
+                        let greekVoice = voices.find(v => v.lang.startsWith('el') && v.name.toLowerCase().includes('male'));
+                        if (!greekVoice) {
+                            greekVoice = voices.find(v => v.lang.startsWith('el'));
+                        }
+                        if (greekVoice) {
+                            utterance.voice = greekVoice;
+                        }
+                        window.speechSynthesis.speak(utterance);
+                    };
+                } else {
+                    const voices = window.speechSynthesis.getVoices();
+                    // Chercher une voix masculine grecque en priorité
+                    let greekVoice = voices.find(v => v.lang.startsWith('el') && v.name.toLowerCase().includes('male'));
+                    if (!greekVoice) {
+                        greekVoice = voices.find(v => v.lang.startsWith('el'));
+                    }
+                    if (greekVoice) {
+                        utterance.voice = greekVoice;
+                        console.log('Voix sélectionnée:', greekVoice.name);
+                    }
+                    window.speechSynthesis.speak(utterance);
+                }
             } else {
                 alert('Synthèse vocale non supportée.');
             }
@@ -767,7 +736,7 @@
         });
 
         userInput.focus();
-    </script>
+    </script>   
 </body>
 
 </html>
