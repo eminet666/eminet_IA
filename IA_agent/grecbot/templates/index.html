@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Σωκράτης 2.0 - Φιλοσοφικές Συνομιλίες</title>
+    <!-- Bibliothèques pour export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -39,11 +42,35 @@
             color: white;
             padding: 20px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
             font-size: 24px;
             margin-bottom: 0;
+        }
+
+        .export-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .export-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.05);
         }
 
         .chat-box {
@@ -354,6 +381,10 @@
     <div class="container">
         <div class="header">
             <h1>🇬🇷 Σωκράτης 2.0</h1>
+            <button class="export-btn" id="exportBtn">
+                <span>📄</span>
+                <span>PDF</span>
+            </button>
         </div>
 
         <div class="chat-box" id="chatBox"></div>
@@ -379,6 +410,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const micBtn = document.getElementById('micBtn');
         const loading = document.getElementById('loading');
+        const exportBtn = document.getElementById('exportBtn');
 
         const SPEECH_RATE = 0.8;
         let recognition = null;
@@ -720,9 +752,123 @@
             });
         });
 
+        // Fonction d'export PDF
+        async function exportToPDF() {
+            if (chatBox.children.length === 0) {
+                alert('Aucune conversation à exporter !');
+                return;
+            }
+
+            exportBtn.disabled = true;
+            exportBtn.textContent = '⏳ Génération...';
+
+            try {
+                // Créer une copie de la zone de chat pour l'export
+                const exportContainer = document.createElement('div');
+                exportContainer.style.width = '800px';
+                exportContainer.style.background = '#f5f5f5';
+                exportContainer.style.padding = '20px';
+                exportContainer.style.position = 'absolute';
+                exportContainer.style.left = '-9999px';
+                document.body.appendChild(exportContainer);
+
+                // Ajouter un titre
+                const title = document.createElement('div');
+                title.style.textAlign = 'center';
+                title.style.fontSize = '24px';
+                title.style.fontWeight = 'bold';
+                title.style.marginBottom = '20px';
+                title.style.color = '#6674ea';
+                title.textContent = '🇬🇷 Conversation avec Σωκράτης 2.0';
+                exportContainer.appendChild(title);
+
+                const dateDiv = document.createElement('div');
+                dateDiv.style.textAlign = 'center';
+                dateDiv.style.fontSize = '14px';
+                dateDiv.style.marginBottom = '30px';
+                dateDiv.style.color = '#666';
+                dateDiv.textContent = new Date().toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                exportContainer.appendChild(dateDiv);
+
+                // Copier tous les messages (sans les boutons d'action)
+                const messages = chatBox.querySelectorAll('.message');
+                messages.forEach(function (msg) {
+                    const msgClone = msg.cloneNode(true);
+
+                    // Supprimer les boutons d'action et traductions
+                    const actions = msgClone.querySelector('.message-actions');
+                    if (actions) actions.remove();
+
+                    const translations = msgClone.querySelectorAll('.translation');
+                    translations.forEach(t => t.remove());
+
+                    // Fermer les tooltips
+                    const tooltips = msgClone.querySelectorAll('.vocab-word');
+                    tooltips.forEach(t => t.classList.remove('show-tooltip'));
+
+                    exportContainer.appendChild(msgClone);
+                });
+
+                // Générer le PDF avec html2canvas + jsPDF
+                const canvas = await html2canvas(exportContainer, {
+                    scale: 2,
+                    logging: false,
+                    useCORS: true
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+
+                // Format A4
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                const imgWidth = pdfWidth - 20; // Marges de 10mm de chaque côté
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                let heightLeft = imgHeight;
+                let position = 10;
+
+                // Ajouter la première page
+                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+
+                // Ajouter des pages supplémentaires si nécessaire
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight + 10;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pdfHeight;
+                }
+
+                // Sauvegarder le PDF
+                const filename = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
+                pdf.save(filename);
+
+                // Nettoyer
+                document.body.removeChild(exportContainer);
+
+                alert('✅ PDF exporté avec succès !');
+
+            } catch (error) {
+                console.error('Erreur export PDF:', error);
+                alert('❌ Erreur lors de l\'export PDF');
+            } finally {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = '<span>📄</span><span>PDF</span>';
+            }
+        }
+
         // Event listeners
         sendBtn.addEventListener('click', sendMessage);
         micBtn.addEventListener('click', toggleRecording);
+        exportBtn.addEventListener('click', exportToPDF);
 
         userInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && !sendBtn.disabled) {
@@ -736,7 +882,7 @@
         });
 
         userInput.focus();
-    </script>   
+    </script>
 </body>
 
 </html>
