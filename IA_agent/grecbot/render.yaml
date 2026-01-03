@@ -11,3 +11,7 @@ services:
         sync: false
       - key: SECRET_KEY
         sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_PASSWORD
+        sync: false
