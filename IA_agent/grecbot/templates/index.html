@@ -73,6 +73,11 @@
             transform: translateY(-50%) scale(1.05);
         }
 
+        .export-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .chat-box {
             flex: 1;
             overflow-y: auto;
@@ -382,8 +387,8 @@
         <div class="header">
             <h1>🇬🇷 Σωκράτης 2.0</h1>
             <button class="export-btn" id="exportBtn">
-                <span>📄</span>
-                <span>PDF</span>
+                <span>📧</span>
+                <span>Envoyer</span>
             </button>
         </div>
 
@@ -417,6 +422,7 @@
         let isRecording = false;
         let mediaRecorder = null;
         let audioChunks = [];
+        let allVocabulary = []; // Stocker tout le vocabulaire de la session
 
         // Détecter iOS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -752,7 +758,7 @@
             });
         });
 
-        // Fonction d'export PDF
+        // Fonction d'export PDF avec vocabulaire enrichi et envoi email
         async function exportToPDF() {
             if (chatBox.children.length === 0) {
                 alert('Aucune conversation à exporter !');
@@ -760,28 +766,51 @@
             }
 
             exportBtn.disabled = true;
-            exportBtn.textContent = '⏳ Génération...';
+            exportBtn.innerHTML = '<span>⏳</span><span>Envoi...</span>';
 
             try {
-                // Créer une copie de la zone de chat pour l'export
+                // 1. Enrichir le vocabulaire
+                const uniqueWords = [...new Set(allVocabulary.map(v => v.word))];
+                let enrichedVocab = [];
+
+                if (uniqueWords.length > 0) {
+                    exportBtn.innerHTML = '<span>⏳</span><span>Analyse...</span>';
+
+                    const vocabResponse = await fetch('/enrich-vocabulary', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ words: uniqueWords })
+                    });
+
+                    const vocabData = await vocabResponse.json();
+                    if (vocabData.success) {
+                        enrichedVocab = vocabData.words;
+                    }
+                }
+
+                exportBtn.innerHTML = '<span>⏳</span><span>PDF...</span>';
+
+                // 2. Créer le contenu à exporter
                 const exportContainer = document.createElement('div');
                 exportContainer.style.width = '800px';
                 exportContainer.style.background = '#f5f5f5';
                 exportContainer.style.padding = '20px';
                 exportContainer.style.position = 'absolute';
                 exportContainer.style.left = '-9999px';
+                exportContainer.style.fontFamily = '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
                 document.body.appendChild(exportContainer);
 
-                // Ajouter un titre
+                // Titre
                 const title = document.createElement('div');
                 title.style.textAlign = 'center';
-                title.style.fontSize = '24px';
+                title.style.fontSize = '28px';
                 title.style.fontWeight = 'bold';
-                title.style.marginBottom = '20px';
+                title.style.marginBottom = '10px';
                 title.style.color = '#6674ea';
                 title.textContent = '🇬🇷 Conversation avec Σωκράτης 2.0';
                 exportContainer.appendChild(title);
 
+                // Date
                 const dateDiv = document.createElement('div');
                 dateDiv.style.textAlign = 'center';
                 dateDiv.style.fontSize = '14px';
@@ -795,51 +824,119 @@
                 });
                 exportContainer.appendChild(dateDiv);
 
-                // Copier tous les messages (sans les boutons d'action)
+                // Messages
                 const messages = chatBox.querySelectorAll('.message');
                 messages.forEach(function (msg) {
                     const msgClone = msg.cloneNode(true);
-
-                    // Supprimer les boutons d'action et traductions
                     const actions = msgClone.querySelector('.message-actions');
                     if (actions) actions.remove();
-
                     const translations = msgClone.querySelectorAll('.translation');
                     translations.forEach(t => t.remove());
-
-                    // Fermer les tooltips
                     const tooltips = msgClone.querySelectorAll('.vocab-word');
                     tooltips.forEach(t => t.classList.remove('show-tooltip'));
-
                     exportContainer.appendChild(msgClone);
                 });
 
-                // Générer le PDF avec html2canvas + jsPDF
+                // 3. Ajouter la section vocabulaire
+                if (enrichedVocab.length > 0) {
+                    const vocabSection = document.createElement('div');
+                    vocabSection.style.marginTop = '40px';
+                    vocabSection.style.pageBreakBefore = 'always';
+                    vocabSection.style.background = 'white';
+                    vocabSection.style.padding = '20px';
+                    vocabSection.style.borderRadius = '10px';
+
+                    const vocabTitle = document.createElement('h2');
+                    vocabTitle.style.color = '#6674ea';
+                    vocabTitle.style.borderBottom = '3px solid #6674ea';
+                    vocabTitle.style.paddingBottom = '10px';
+                    vocabTitle.style.marginBottom = '20px';
+                    vocabTitle.textContent = '📚 Vocabulaire de la session';
+                    vocabSection.appendChild(vocabTitle);
+
+                    enrichedVocab.forEach(function (word) {
+                        const wordDiv = document.createElement('div');
+                        wordDiv.style.marginBottom = '20px';
+                        wordDiv.style.paddingBottom = '15px';
+                        wordDiv.style.borderBottom = '1px solid #e0e0e0';
+
+                        // Mot grec
+                        const wordTitle = document.createElement('div');
+                        wordTitle.style.fontSize = '20px';
+                        wordTitle.style.fontWeight = 'bold';
+                        wordTitle.style.color = '#333';
+                        wordTitle.style.marginBottom = '5px';
+                        wordTitle.textContent = word.word;
+                        wordDiv.appendChild(wordTitle);
+
+                        // Traduction
+                        const translation = document.createElement('div');
+                        translation.style.fontSize = '16px';
+                        translation.style.color = '#666';
+                        translation.style.fontStyle = 'italic';
+                        translation.style.marginBottom = '10px';
+                        translation.textContent = '→ ' + word.translation;
+                        wordDiv.appendChild(translation);
+
+                        // Formes verbales
+                        if (word.verb_forms) {
+                            const verbForms = document.createElement('div');
+                            verbForms.style.fontSize = '14px';
+                            verbForms.style.color = '#0066cc';
+                            verbForms.style.marginBottom = '8px';
+                            verbForms.textContent = '⚡ ' + word.verb_forms;
+                            wordDiv.appendChild(verbForms);
+                        }
+
+                        // Exemple
+                        if (word.example) {
+                            const example = document.createElement('div');
+                            example.style.fontSize = '15px';
+                            example.style.color = '#444';
+                            example.style.marginTop = '8px';
+                            example.textContent = '💬 ' + word.example;
+                            wordDiv.appendChild(example);
+
+                            if (word.example_translation) {
+                                const exampleTrans = document.createElement('div');
+                                exampleTrans.style.fontSize = '14px';
+                                exampleTrans.style.color = '#888';
+                                exampleTrans.style.marginLeft = '20px';
+                                exampleTrans.style.marginTop = '3px';
+                                exampleTrans.textContent = '   ' + word.example_translation;
+                                wordDiv.appendChild(exampleTrans);
+                            }
+                        }
+
+                        vocabSection.appendChild(wordDiv);
+                    });
+
+                    exportContainer.appendChild(vocabSection);
+                }
+
+                // 4. Générer le PDF
                 const canvas = await html2canvas(exportContainer, {
                     scale: 2,
                     logging: false,
                     useCORS: true
                 });
 
+                document.body.removeChild(exportContainer);
+
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
-
-                // Format A4
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = pdf.internal.pageSize.getHeight();
-
-                const imgWidth = pdfWidth - 20; // Marges de 10mm de chaque côté
+                const imgWidth = pdfWidth - 20;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
                 let heightLeft = imgHeight;
                 let position = 10;
 
-                // Ajouter la première page
                 pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
                 heightLeft -= pdfHeight;
 
-                // Ajouter des pages supplémentaires si nécessaire
                 while (heightLeft > 0) {
                     position = heightLeft - imgHeight + 10;
                     pdf.addPage();
@@ -847,21 +944,38 @@
                     heightLeft -= pdfHeight;
                 }
 
-                // Sauvegarder le PDF
-                const filename = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
-                pdf.save(filename);
+                // 5. Envoyer par email
+                exportBtn.innerHTML = '<span>📧</span><span>Envoi...</span>';
 
-                // Nettoyer
-                document.body.removeChild(exportContainer);
+                const pdfBase64 = pdf.output('datauristring');
 
-                alert('✅ PDF exporté avec succès !');
+                const emailResponse = await fetch('/send-pdf-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pdf: pdfBase64,
+                        email: 'eminet666@gmail.com'
+                    })
+                });
+
+                const emailData = await emailResponse.json();
+
+                if (emailData.success) {
+                    alert('✅ PDF envoyé par email à eminet666@gmail.com !');
+                } else {
+                    alert('⚠️ PDF généré mais erreur d\'envoi. Voulez-vous le télécharger ?');
+                    if (confirm('Télécharger le PDF ?')) {
+                        const filename = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
+                        pdf.save(filename);
+                    }
+                }
 
             } catch (error) {
-                console.error('Erreur export PDF:', error);
-                alert('❌ Erreur lors de l\'export PDF');
+                console.error('Erreur export:', error);
+                alert('❌ Erreur: ' + error.message);
             } finally {
                 exportBtn.disabled = false;
-                exportBtn.innerHTML = '<span>📄</span><span>PDF</span>';
+                exportBtn.innerHTML = '<span>📧</span><span>Envoyer</span>';
             }
         }
 

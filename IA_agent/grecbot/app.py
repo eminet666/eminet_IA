@@ -8,6 +8,12 @@ import re
 import base64
 import requests
 import tempfile
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib
+from datetime import datetime
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -17,8 +23,12 @@ app.secret_key = os.getenv("SECRET_KEY", secrets.token_hex(16))
 
 # Configuration Mistral
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")  # Pour Whisper ultra-rapide
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = "mistral-large-latest"
+
+# Configuration email (Gmail)
+EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS", "eminet666@gmail.com")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 # Prompt système
 SYSTEM_PROMPT = """Είσαι ένας φιλικός βοηθός που μιλάει ελληνικά. 
@@ -50,7 +60,7 @@ Rules for vocabulary:
 @app.route('/')
 def index():
     """Page d'accueil"""
-    session.clear()  # Nouvelle session
+    session.clear()
     return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
@@ -63,28 +73,22 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Message vide'}), 400
         
-        # Récupérer ou initialiser l'historique
         if 'history' not in session:
             session['history'] = [
                 {"role": "system", "content": SYSTEM_PROMPT}
             ]
         
         history = session['history']
-        
-        # Ajouter le message utilisateur
         history.append({"role": "user", "content": user_message})
         
-        # Appeler Mistral API
         client = Mistral(api_key=MISTRAL_API_KEY)
         response = client.chat.complete(
             model=MODEL,
             messages=history
         )
         
-        # Extraire la réponse
         assistant_message = response.choices[0].message.content
         
-        # Nettoyer la réponse (enlever markdown si présent)
         cleaned = assistant_message.strip()
         if cleaned.startswith('```json'):
             cleaned = re.sub(r'^```json\s*', '', cleaned)
@@ -98,34 +102,26 @@ def chat():
             text = parsed.get('text', '').strip()
             vocabulary = parsed.get('vocabulary', [])
             
-            # Nettoyer complètement le texte de tous les caractères problématiques
             text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-            # Supprimer les doubles espaces
-            import re as re_module
-            text = re_module.sub(r'\s+', ' ', text)
+            text = re.sub(r'\s+', ' ', text)
             
-            # Nettoyer aussi les traductions du vocabulaire
             for item in vocabulary:
                 if 'translation' in item:
                     item['translation'] = item['translation'].replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-                    item['translation'] = re_module.sub(r'\s+', ' ', item['translation']).strip()
+                    item['translation'] = re.sub(r'\s+', ' ', item['translation']).strip()
                 if 'word' in item:
                     item['word'] = item['word'].replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-                    item['word'] = re_module.sub(r'\s+', ' ', item['word']).strip()
+                    item['word'] = re.sub(r'\s+', ' ', item['word']).strip()
             
         except json.JSONDecodeError as e:
             print(f"JSON parsing error: {e}")
             print(f"Raw response: {assistant_message}")
-            # Si le parsing échoue, utiliser le texte brut
             text = assistant_message.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
-            import re as re_module
-            text = re_module.sub(r'\s+', ' ', text)
+            text = re.sub(r'\s+', ' ', text)
             vocabulary = []
         
-        # Ajouter à l'historique (texte seulement, pas le JSON)
         history.append({"role": "assistant", "content": text})
         
-        # Limiter l'historique
         if len(history) > 52:
             history = [history[0]] + history[-50:]
         
@@ -159,7 +155,6 @@ def translate():
         if not greek_text:
             return jsonify({'error': 'Texte vide'}), 400
         
-        # Créer un prompt de traduction
         translation_prompt = f"""Traduis ce texte grec en français de manière naturelle et précise:
 
 {greek_text}
@@ -185,9 +180,137 @@ Donne uniquement la traduction en français, sans explications supplémentaires.
             'success': False
         }), 500
 
+@app.route('/enrich-vocabulary', methods=['POST'])
+def enrich_vocabulary():
+    """Enrichir le vocabulaire avec exemples et formes verbales"""
+    try:
+        data = request.json
+        words = data.get('words', [])
+        
+        if not words:
+            return jsonify({'words': [], 'success': True})
+        
+        words_list = ', '.join([f'"{w}"' for w in words])
+        
+        prompt = f"""Pour chaque mot grec suivant: {words_list}
+
+Fournis UNIQUEMENT un JSON valide avec cette structure exacte:
+{{
+  "words": [
+    {{
+      "word": "mot grec",
+      "translation": "traduction française",
+      "example": "exemple d'usage en grec",
+      "example_translation": "traduction de l'exemple",
+      "verb_forms": "présent: X, aoriste: Y" (seulement si c'est un verbe, sinon null)
+    }}
+  ]
+}}
+
+IMPORTANT:
+- Si le mot est un VERBE, donne les formes: présent (1ère personne singulier) et aoriste
+- Si ce n'est PAS un verbe, mets verb_forms: null
+- L'exemple doit être une phrase courte et naturelle
+- Retourne UNIQUEMENT le JSON, sans markdown, sans explication"""
+
+        client = Mistral(api_key=MISTRAL_API_KEY)
+        response = client.chat.complete(
+            model=MODEL,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        result = response.choices[0].message.content.strip()
+        
+        if result.startswith('```json'):
+            result = re.sub(r'^```json\s*', '', result)
+            result = re.sub(r'\s*```$', '', result)
+        elif result.startswith('```'):
+            result = re.sub(r'^```\s*', '', result)
+            result = re.sub(r'\s*```$', '', result)
+        
+        enriched = json.loads(result)
+        
+        return jsonify({
+            'words': enriched.get('words', []),
+            'success': True
+        })
+        
+    except Exception as e:
+        print(f"Enrichment error: {e}")
+        return jsonify({
+            'words': [],
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/send-pdf-email', methods=['POST'])
+def send_pdf_email():
+    """Envoyer le PDF par email"""
+    try:
+        if not EMAIL_PASSWORD:
+            return jsonify({
+                'error': 'Email non configuré sur le serveur',
+                'success': False
+            }), 500
+        
+        data = request.json
+        pdf_data = data.get('pdf', '')
+        recipient = data.get('email', EMAIL_ADDRESS)
+        
+        if not pdf_data:
+            return jsonify({'error': 'Pas de données PDF'}), 400
+        
+        if ',' in pdf_data:
+            pdf_data = pdf_data.split(',')[1]
+        
+        pdf_bytes = base64.b64decode(pdf_data)
+        
+        msg = MIMEMultipart()
+        msg['From'] = EMAIL_ADDRESS
+        msg['To'] = recipient
+        msg['Subject'] = f'Conversation Σωκράτης 2.0 - {datetime.now().strftime("%Y-%m-%d")}'
+        
+        body = """Bonjour,
+
+Voici votre conversation avec Σωκράτης 2.0 en pièce jointe.
+
+Καλή συνέχεια!
+
+---
+Σωκράτης 2.0 Bot
+"""
+        
+        msg.attach(MIMEText(body, 'plain', 'utf-8'))
+        
+        filename = f'Socrate_{datetime.now().strftime("%Y-%m-%d")}.pdf'
+        attachment = MIMEBase('application', 'pdf')
+        attachment.set_payload(pdf_bytes)
+        encoders.encode_base64(attachment)
+        attachment.add_header('Content-Disposition', f'attachment; filename={filename}')
+        msg.attach(attachment)
+        
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.send_message(msg)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Email envoyé à {recipient}'
+        })
+        
+    except Exception as e:
+        print(f"Email error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
+
 @app.route('/transcribe', methods=['POST'])
 def transcribe():
-    """Transcrire l'audio en texte avec Whisper sur Groq (ultra-rapide et gratuit)"""
+    """Transcrire l'audio en texte avec Whisper sur Groq"""
     try:
         if not GROQ_API_KEY:
             return jsonify({
@@ -195,30 +318,22 @@ def transcribe():
                 'success': False
             }), 500
         
-        # Récupérer l'audio en base64
         data = request.json
         audio_data = data.get('audio', '')
         
         if not audio_data:
             return jsonify({'error': 'Pas de données audio'}), 400
         
-        # Décoder le base64
         if ',' in audio_data:
             audio_data = audio_data.split(',')[1]
         
         audio_bytes = base64.b64decode(audio_data)
         
-        # Sauvegarder temporairement
-        import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as temp_file:
             temp_file.write(audio_bytes)
             temp_path = temp_file.name
         
         try:
-            # Appeler l'API Groq (compatible OpenAI)
-            import requests
-            
-            # Groq utilise une API compatible OpenAI
             url = "https://api.groq.com/openai/v1/audio/transcriptions"
             headers = {
                 "Authorization": f"Bearer {GROQ_API_KEY}"
@@ -228,7 +343,7 @@ def transcribe():
                 files = {
                     'file': ('audio.webm', audio_file, 'audio/webm'),
                     'model': (None, 'whisper-large-v3'),
-                    'language': (None, 'el')  # Grec
+                    'language': (None, 'el')
                 }
                 
                 response = requests.post(url, headers=headers, files=files)
@@ -241,7 +356,6 @@ def transcribe():
                     'success': False
                 }), 500
             
-            # Extraire le texte transcrit
             text = result.get('text', '')
             
             return jsonify({
@@ -250,7 +364,6 @@ def transcribe():
             })
             
         finally:
-            # Nettoyer le fichier temporaire
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
         
@@ -265,8 +378,7 @@ def transcribe():
 
 if __name__ == '__main__':
     if not MISTRAL_API_KEY:
-        print("⚠️  ERREUR: MISTRAL_API_KEY non trouvée dans les variables d'environnement!")
+        print("⚠️  ERREUR: MISTRAL_API_KEY non trouvée!")
         exit(1)
     
-    # Pour le développement local
     app.run(debug=True, host='0.0.0.0', port=5000)
