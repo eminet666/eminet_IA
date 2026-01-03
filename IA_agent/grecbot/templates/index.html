@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Σωκράτης 2.0 - Φιλοσοφικές Συνομιλίες</title>
     <!-- Bibliothèques pour export PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
@@ -50,11 +49,16 @@
             margin-bottom: 0;
         }
 
-        .export-btn {
+        .header-buttons {
             position: absolute;
             right: 20px;
             top: 50%;
             transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .export-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 2px solid white;
             color: white;
@@ -70,12 +74,13 @@
 
         .export-btn:hover {
             background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-50%) scale(1.05);
+            transform: scale(1.05);
         }
 
         .export-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
         .chat-box {
@@ -386,10 +391,12 @@
     <div class="container">
         <div class="header">
             <h1>🇬🇷 Σωκράτης 2.0</h1>
-            <button class="export-btn" id="exportBtn">
-                <span>📧</span>
-                <span>Envoyer</span>
-            </button>
+            <div class="header-buttons">
+                <button class="export-btn" id="emailBtn">
+                    <span>📧</span>
+                    <span>Email</span>
+                </button>
+            </div>
         </div>
 
         <div class="chat-box" id="chatBox"></div>
@@ -415,7 +422,7 @@
         const sendBtn = document.getElementById('sendBtn');
         const micBtn = document.getElementById('micBtn');
         const loading = document.getElementById('loading');
-        const exportBtn = document.getElementById('exportBtn');
+        const emailBtn = document.getElementById('emailBtn');
 
         const SPEECH_RATE = 0.8;
         let recognition = null;
@@ -758,8 +765,8 @@
             });
         });
 
-        // Fonction d'export PDF avec vocabulaire enrichi et envoi email
-        async function exportToPDF() {
+        // Fonction d'export PDF
+        async function generatePDF() {
             if (chatBox.children.length === 0) {
                 alert('Aucune conversation à exporter !');
                 return;
@@ -774,8 +781,6 @@
                 let enrichedVocab = [];
 
                 if (uniqueWords.length > 0) {
-                    exportBtn.innerHTML = '<span>⏳</span><span>Analyse...</span>';
-
                     const vocabResponse = await fetch('/enrich-vocabulary', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -787,8 +792,6 @@
                         enrichedVocab = vocabData.words;
                     }
                 }
-
-                exportBtn.innerHTML = '<span>⏳</span><span>PDF...</span>';
 
                 // 2. Créer le contenu à exporter
                 const exportContainer = document.createElement('div');
@@ -944,45 +947,92 @@
                     heightLeft -= pdfHeight;
                 }
 
-                // 5. Envoyer par email
-                exportBtn.innerHTML = '<span>📧</span><span>Envoi...</span>';
+                return pdf;
 
-                const pdfBase64 = pdf.output('datauristring');
+            } catch (error) {
+                console.error('Erreur génération PDF:', error);
+                throw error;
+            }
+        }
 
-                const emailResponse = await fetch('/send-pdf-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        pdf: pdfBase64,
-                        email: 'eminet666@gmail.com'
-                    })
+        // Envoyer le PDF par email
+        async function emailPDF() {
+            emailBtn.disabled = true;
+            emailBtn.innerHTML = '<span>⏳</span><span>Envoi...</span>';
+
+            try {
+                const pdf = await generatePDF();
+                if (!pdf) return;
+
+                // Préparer le texte du dialogue pour l'email
+                const messages = chatBox.querySelectorAll('.message');
+                let dialogueText = '';
+
+                messages.forEach(function (msg) {
+                    const isUser = msg.classList.contains('user');
+                    const textEl = msg.querySelector('.message-text');
+                    const text = textEl ? textEl.textContent.trim() : '';
+
+                    if (text) {
+                        if (isUser) {
+                            dialogueText += `\nVous: ${text}\n`;
+                        } else {
+                            dialogueText += `\nΣωκράτης: ${text}\n`;
+                        }
+                    }
                 });
 
-                const emailData = await emailResponse.json();
+                // Envoyer par email
+                const pdfBase64 = pdf.output('datauristring');
 
-                if (emailData.success) {
-                    alert('✅ PDF envoyé par email à eminet666@gmail.com !');
-                } else {
-                    alert('⚠️ PDF généré mais erreur d\'envoi. Voulez-vous le télécharger ?');
-                    if (confirm('Télécharger le PDF ?')) {
+                try {
+                    const emailResponse = await fetch('/send-pdf-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pdf: pdfBase64,
+                            dialogue: dialogueText,
+                            email: 'eminet666@gmail.com'
+                        }),
+                        signal: AbortSignal.timeout(120000)
+                    });
+
+                    if (!emailResponse.ok) {
+                        const errorText = await emailResponse.text();
+                        console.error('Erreur serveur:', errorText);
+                        throw new Error(`Erreur serveur (${emailResponse.status})`);
+                    }
+
+                    const emailData = await emailResponse.json();
+
+                    if (emailData.success) {
+                        alert('✅ PDF envoyé par email à eminet666@gmail.com !');
+                    } else {
+                        throw new Error(emailData.error || 'Erreur inconnue');
+                    }
+                } catch (emailError) {
+                    console.error('Erreur email:', emailError);
+                    const download = confirm('⚠️ Impossible d\'envoyer l\'email.\n\n' + emailError.message + '\n\nVoulez-vous télécharger le PDF localement ?');
+                    if (download) {
                         const filename = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
                         pdf.save(filename);
+                        alert('✅ PDF téléchargé !');
                     }
                 }
 
             } catch (error) {
-                console.error('Erreur export:', error);
+                console.error('Erreur:', error);
                 alert('❌ Erreur: ' + error.message);
             } finally {
-                exportBtn.disabled = false;
-                exportBtn.innerHTML = '<span>📧</span><span>Envoyer</span>';
+                emailBtn.disabled = false;
+                emailBtn.innerHTML = '<span>📧</span><span>Email</span>';
             }
         }
 
         // Event listeners
         sendBtn.addEventListener('click', sendMessage);
         micBtn.addEventListener('click', toggleRecording);
-        exportBtn.addEventListener('click', exportToPDF);
+        emailBtn.addEventListener('click', emailPDF);
 
         userInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter' && !sendBtn.disabled) {

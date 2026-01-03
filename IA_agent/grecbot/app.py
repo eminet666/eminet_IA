@@ -246,33 +246,58 @@ IMPORTANT:
 @app.route('/send-pdf-email', methods=['POST'])
 def send_pdf_email():
     """Envoyer le PDF par email"""
+    
     try:
+        # Vérifier la configuration email
         if not EMAIL_PASSWORD:
+            print("⚠️ EMAIL_PASSWORD non configuré")
             return jsonify({
-                'error': 'Email non configuré sur le serveur',
+                'error': 'Configuration email manquante.',
                 'success': False
-            }), 500
+            }), 400
         
         data = request.json
         pdf_data = data.get('pdf', '')
+        dialogue = data.get('dialogue', '')
         recipient = data.get('email', EMAIL_ADDRESS)
         
         if not pdf_data:
             return jsonify({'error': 'Pas de données PDF'}), 400
         
+        print(f"📧 Tentative d'envoi email à {recipient}")
+        print(f"📦 Taille données PDF: {len(pdf_data)} caractères")
+        
         if ',' in pdf_data:
             pdf_data = pdf_data.split(',')[1]
         
         pdf_bytes = base64.b64decode(pdf_data)
+        print(f"✅ PDF décodé: {len(pdf_bytes)} bytes ({len(pdf_bytes)/1024:.2f} KB)")
+        
+        # Vérifier la taille
+        if len(pdf_bytes) > 25 * 1024 * 1024:  # 25 MB limite Gmail
+            return jsonify({
+                'error': 'PDF trop volumineux (> 25 MB).',
+                'success': False
+            }), 413
         
         msg = MIMEMultipart()
         msg['From'] = EMAIL_ADDRESS
         msg['To'] = recipient
         msg['Subject'] = f'Conversation Σωκράτης 2.0 - {datetime.now().strftime("%Y-%m-%d")}'
         
-        body = """Bonjour,
+        # Corps de l'email avec le dialogue
+        body = f"""Bonjour,
 
-Voici votre conversation avec Σωκράτης 2.0 en pièce jointe.
+Voici votre conversation avec Σωκράτης 2.0.
+
+═══════════════════════════════════════
+DIALOGUE DE LA SESSION
+═══════════════════════════════════════
+{dialogue}
+
+═══════════════════════════════════════
+
+Le PDF en pièce jointe contient la conversation complète avec le vocabulaire enrichi (exemples d'usage et conjugaisons).
 
 Καλή συνέχεια!
 
@@ -289,22 +314,45 @@ Voici votre conversation avec Σωκράτης 2.0 en pièce jointe.
         attachment.add_header('Content-Disposition', f'attachment; filename={filename}')
         msg.attach(attachment)
         
-        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        print(f"📨 Connexion à Gmail SMTP...")
+        
+        # Augmenter le timeout SMTP
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=60) as server:
             server.starttls()
+            print(f"🔐 Authentification...")
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            print(f"✉️ Envoi du message...")
             server.send_message(msg)
         
+        print(f"✅ Email envoyé avec succès!")
         return jsonify({
             'success': True,
             'message': f'Email envoyé à {recipient}'
         })
         
+    except smtplib.SMTPAuthenticationError as e:
+        error_msg = "Erreur d'authentification Gmail. Vérifiez le mot de passe d'application."
+        print(f"❌ {error_msg}: {e}")
+        return jsonify({
+            'error': error_msg,
+            'success': False
+        }), 401
+    
+    except smtplib.SMTPException as e:
+        error_msg = f"Erreur SMTP: {str(e)}"
+        print(f"❌ {error_msg}")
+        return jsonify({
+            'error': error_msg,
+            'success': False
+        }), 500
+        
     except Exception as e:
-        print(f"Email error: {e}")
+        error_msg = str(e)
+        print(f"❌ Erreur email: {error_msg}")
         import traceback
         traceback.print_exc()
         return jsonify({
-            'error': str(e),
+            'error': error_msg,
             'success': False
         }), 500
 
