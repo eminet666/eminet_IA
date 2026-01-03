@@ -1,0 +1,13 @@
+# garder la piste video choisie
+MP4Box -add video.mp4#video -add video.mp4#audio3 output.mp4
+# s'assurer que la vidéo mp4 est compatible ffmpeg
+MP4Box -inter 500 output.mp4 -out fixed.mp4
+# traduire la vidéo (avec génération de sous-titre)
+python traduire_video.py fixed.mp4
+
+# extraction
+MP4Box -splitx 90:225 output.mp4 -out extract2.mp4
+MP4Box -splitx 90:225 fixed.mp4 -out extract1.mp4
+
+python traduire_video.py extract1.mp4
+python traduire_video.py extract1.mp4
