@@ -41,7 +41,7 @@ client = Mistral(api_key=MISTRAL_API_KEY)
 
 def generate_greek_dialogue():
     prompt = """
-    Crée un dialogue en grec moderne (niveau B2) entre Stephanos et Anna, sur le sujet suivant : {sujet}
+    Crée un dialogue en grec moderne (niveau C1) entre Stephanos et Anna, sur le sujet suivant : {sujet}
     
     Le dialogue doit faire environ une page A4 (environ 500 mots).
     
@@ -86,7 +86,22 @@ def generate_greek_dialogue():
     sujets = [
         "Les courses au marché", "Un dîner en famille",
         "Une sortie au cinéma", "Un problème de voisinage",
-        "Un voyage en bus", "Une discussion sur la météo"
+        "Un voyage en bus", "Une discussion sur la météo", "Les plans pour le week-end",
+        "Une visite chez le médecin", "L'organisation d'une fête", "Une conversation au café",
+        "Les activités de loisirs", "Une dispute amicale", "Les traditions grecques",
+        "Une journée à la plage", "Les transports en commun", "les voyages en bateau"
+        "Une rencontre imprévue", "Les habitudes alimentaires",
+        "Les projets de vacances", "Une visite culturelle", "la littérature grecque", 
+        "la Crète", "Chios", "Samos", "Athènes", "Thessalonique", "Les îles grecques",
+        "La Thessalie", "les séries grecques populaires", "le cinéma grec", "la musique grecque contemporaine"
+        "le rébétiko", "la cuisine grecque traditionnelle", "les sites archéologiques en Grèce",
+        "les musées archéologiques", "l'histoire de la Grèce antique", "la mythologie grecque",
+        "les fêtes religieuses en Grèce", "la guerre d'indépendance grecque",
+        "la vie quotidienne en Grèce moderne", "l'histoire moderne de la Grèce", "la politique en Grèce contemporaine"
+        "les grands philosophes grecs", "la démocratie athénienne", "les Jeux Olympiques antiques",
+        "la philosophie stoïcienne", "les écoles philosophiques grecques", "la statuaire grecque antique",
+        "un rapprochement amoureux", "une discussion de séduction", "une conversation sur les relations amoureuses"
+
     ]
     
     sujet = sujets[datetime.now().day % len(sujets)]

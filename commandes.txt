@@ -1,3 +1,8 @@
+current
+python generate_map.py POI_samos_new.csv map_samos_new.html
+python generate_map.py POI_chios_new.csv map_chios_new.html
+
+
 annulation de push : 
 git reset --hard HEAD~2 (revient à 2 commits en avant mais supprime les fichiers)
 git push origin main --force
