@@ -1,23 +1,8 @@
 grecbot/
-├── app.py                          # Point d'entrée (très léger)
-├── config.py                       # Configuration
-├── prompts.py                      # Prompts système
-├── routes/
-│   ├── __init__.py                 # Initialisation des routes
-│   ├── chat.py                     # Route /chat
-│   ├── translation.py              # Route /translate
-│   ├── vocabulary.py               # Route /enrich-vocabulary
-│   ├── email_service.py            # Route /send-pdf-email
-│   └── transcription.py            # Route /transcribe
-├── services/
-│   ├── __init__.py
-│   ├── mistral_service.py          # Service Mistral AI
-│   ├── groq_service.py             # Service Groq (Whisper)
-│   ├── email_service.py            # Service email SMTP
-│   └── email_templates.py          # Templates d'emails
-├── utils/
-│   ├── __init__.py
-│   └── json_cleaner.py             # Nettoyage JSON
+├── app.py              # Routes principales (200 lignes)
+├── config.py           # Configuration
+├── prompts.py          # Prompts
+├── services.py         # Tous les services (Mistral, Groq, Email)
 ├── static/
 │   ├── css/
 │   │   └── styles.css

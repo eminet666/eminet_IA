@@ -3,11 +3,8 @@
 Thumbs.db
 ~*.*
 
-# environment files
-.env
-__pycache__/
+# ignore environments files
 *.pyc
-venv/
 venv_whisper
 
 # ignore files
@@ -20,3 +17,23 @@ venv_whisper
 # ignore rep
 **/nodejs
 **/z_*
+
+# ALWAYS 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environnements virtuels
+venv/
+env/
+ENV/
+
+# Variables d'environnement
+.env
+
+# IDE
+.vscode/
+.idea/
