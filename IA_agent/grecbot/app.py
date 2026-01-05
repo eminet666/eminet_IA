@@ -13,7 +13,7 @@ import json
 import re
 import base64
 from config import Config
-from prompts import SYSTEM_PROMPT, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
+from prompts import get_system_prompt, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
 from services import MistralService, GroqService, EmailService
 
 # Initialisation
@@ -65,9 +65,9 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Message vide'}), 400
         
-        # Initialiser l'historique
+        # Initialiser l'historique avec le prompt système à jour
         if 'history' not in session:
-            session['history'] = [{"role": "system", "content": SYSTEM_PROMPT}]
+            session['history'] = [{"role": "system", "content": get_system_prompt()}]
         
         history = session['history']
         history.append({"role": "user", "content": user_message})
