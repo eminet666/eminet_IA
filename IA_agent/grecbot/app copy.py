@@ -154,40 +154,28 @@ def enrich_vocabulary():
 def send_pdf_email():
     """Envoyer le PDF par email"""
     try:
-        print("=== DEBUT send_pdf_email ===")
-        print(f"EMAIL_PASSWORD configuré: {bool(Config.EMAIL_PASSWORD)}")
-        
         if not Config.EMAIL_PASSWORD:
-            print("❌ EMAIL_PASSWORD manquant")
             return jsonify({'error': 'Configuration email manquante', 'success': False}), 400
         
         data = request.json
-        print(f"Données reçues: pdf={bool(data.get('pdf'))}, dialogue={bool(data.get('dialogue'))}")
-        
         pdf_data = data.get('pdf', '')
         dialogue = data.get('dialogue', '')
         recipient = data.get('email', Config.EMAIL_ADDRESS)
         
         if not pdf_data:
-            print("❌ Pas de données PDF")
             return jsonify({'error': 'Pas de données PDF'}), 400
         
         # Décoder base64
         if ',' in pdf_data:
             pdf_data = pdf_data.split(',')[1]
-        
-        print(f"Tentative de décodage base64...")
         pdf_bytes = base64.b64decode(pdf_data)
-        print(f"✅ PDF décodé: {len(pdf_bytes)} bytes")
         
         # Envoyer
-        print(f"Appel email_service.send_pdf...")
         result = email_service.send_pdf(pdf_bytes, dialogue, recipient)
-        print(f"✅ Résultat: {result}")
         return jsonify(result)
         
     except Exception as e:
-        print(f"❌ ERREUR send_pdf_email: {type(e).__name__}: {str(e)}")
+        print(f"Email error: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'success': False}), 500
@@ -218,7 +206,6 @@ def transcribe():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'success': False}), 500
-
 
 # ==================== LANCEMENT ====================
 

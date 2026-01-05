@@ -132,10 +132,7 @@ class EmailService:
         Returns:
             dict: {'success': bool, 'message': str}
         """
-        print("=== DEBUT EmailService.send_pdf ===")
-        
         if not self.email_password:
-            print("❌ EMAIL_PASSWORD non configuré")
             raise ValueError("EMAIL_PASSWORD non configuré")
         
         if recipient is None:
@@ -143,15 +140,12 @@ class EmailService:
         
         # Vérifier la taille
         pdf_size_mb = len(pdf_bytes) / (1024 * 1024)
-        print(f"📄 Taille PDF: {pdf_size_mb:.2f} MB")
-        
         if pdf_size_mb > Config.PDF_MAX_SIZE_MB:
             raise ValueError(f'PDF trop volumineux ({pdf_size_mb:.2f} MB > {Config.PDF_MAX_SIZE_MB} MB)')
         
-        print(f"📧 Destinataire: {recipient}")
+        print(f"📧 Envoi à {recipient} - Taille: {pdf_size_mb:.2f} MB")
         
         # Créer le message
-        print("📝 Création du message email...")
         msg = MIMEMultipart()
         msg['From'] = self.email_address
         msg['To'] = recipient
@@ -176,7 +170,6 @@ Le PDF en pièce jointe contient la conversation complète avec le vocabulaire e
         msg.attach(MIMEText(body, 'plain', 'utf-8'))
         
         # Pièce jointe PDF
-        print("📎 Ajout de la pièce jointe PDF...")
         filename = f'Socrate_{datetime.now().strftime("%Y-%m-%d")}.pdf'
         attachment = MIMEBase('application', 'pdf')
         attachment.set_payload(pdf_bytes)
@@ -185,23 +178,15 @@ Le PDF en pièce jointe contient la conversation complète avec le vocabulaire e
         msg.attach(attachment)
         
         # Envoyer
-        print(f"📨 Connexion SMTP à {self.smtp_server}:{self.smtp_port}...")
+        with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.timeout) as server:
+            server.starttls()
+            server.login(self.email_address, self.email_password)
+            server.send_message(msg)
         
-        try:
-            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=self.timeout) as server:
-                print("🔐 STARTTLS...")
-                server.starttls()
-                print("🔑 Authentification...")
-                server.login(self.email_address, self.email_password)
-                print("📤 Envoi du message...")
-                server.send_message(msg)
-            
-            print(f"✅ Email envoyé avec succès à {recipient}!")
-            
-            return {
-                'success': True,
-                'message': f'Email envoyé à {recipient}'
-            }
-        except smtplib.SMTPException as e:
-            print(f"❌ Erreur SMTP: {type(e).__name__}: {str(e)}")
-            raise
+        print(f"✅ Email envoyé avec succès!")
+        
+        return {
+            'success': True,
+            'message': f'Email envoyé à {recipient}'
+        }
+    
