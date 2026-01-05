@@ -1,6 +1,7 @@
 flask
 mistralai
 python-dotenv
+gunicorn
 pytz
 requests
 
