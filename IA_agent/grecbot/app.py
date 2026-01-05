@@ -14,7 +14,7 @@ import re
 import base64
 from config import Config
 from prompts import get_system_prompt, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
-from services import MistralService, GroqService, EmailService
+from services import MistralService, GroqService
 
 # Initialisation
 app = Flask(__name__)
@@ -24,7 +24,6 @@ Config.validate()
 # Services
 mistral = MistralService()
 groq = GroqService()
-email_service = EmailService()
 
 
 # ==================== UTILITAIRES ====================
@@ -148,49 +147,6 @@ def enrich_vocabulary():
     except Exception as e:
         print(f"Enrichment error: {e}")
         return jsonify({'words': [], 'success': False, 'error': str(e)}), 500
-
-
-@app.route('/send-pdf-email', methods=['POST'])
-def send_pdf_email():
-    """Envoyer le PDF par email"""
-    try:
-        print("=== DEBUT send_pdf_email ===")
-        print(f"EMAIL_PASSWORD configuré: {bool(Config.EMAIL_PASSWORD)}")
-        
-        if not Config.EMAIL_PASSWORD:
-            print("❌ EMAIL_PASSWORD manquant")
-            return jsonify({'error': 'Configuration email manquante', 'success': False}), 400
-        
-        data = request.json
-        print(f"Données reçues: pdf={bool(data.get('pdf'))}, dialogue={bool(data.get('dialogue'))}")
-        
-        pdf_data = data.get('pdf', '')
-        dialogue = data.get('dialogue', '')
-        recipient = data.get('email', Config.EMAIL_ADDRESS)
-        
-        if not pdf_data:
-            print("❌ Pas de données PDF")
-            return jsonify({'error': 'Pas de données PDF'}), 400
-        
-        # Décoder base64
-        if ',' in pdf_data:
-            pdf_data = pdf_data.split(',')[1]
-        
-        print(f"Tentative de décodage base64...")
-        pdf_bytes = base64.b64decode(pdf_data)
-        print(f"✅ PDF décodé: {len(pdf_bytes)} bytes")
-        
-        # Envoyer
-        print(f"Appel email_service.send_pdf...")
-        result = email_service.send_pdf(pdf_bytes, dialogue, recipient)
-        print(f"✅ Résultat: {result}")
-        return jsonify(result)
-        
-    except Exception as e:
-        print(f"❌ ERREUR send_pdf_email: {type(e).__name__}: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e), 'success': False}), 500
 
 
 @app.route('/transcribe', methods=['POST'])
