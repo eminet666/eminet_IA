@@ -207,7 +207,6 @@ def transcribe():
         traceback.print_exc()
         return jsonify({'error': str(e), 'success': False}), 500
 
-
 # ==================== LANCEMENT ====================
 
 if __name__ == '__main__':

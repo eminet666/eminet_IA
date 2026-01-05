@@ -170,4 +170,5 @@ async function sendMessage() {
         sendBtn.disabled = false;
         userInput.focus();
     }
+    
 }

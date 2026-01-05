@@ -40,5 +40,6 @@ function closeAllTooltips() {
     });
 }
 
+
 // Fermer les tooltips en cliquant ailleurs
 document.addEventListener('click', closeAllTooltips);

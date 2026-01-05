@@ -21,4 +21,5 @@ userInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !sendBtn.disabled) {
         sendMessage();
     }
+    
 });

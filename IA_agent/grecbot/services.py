@@ -189,3 +189,4 @@ Le PDF en pièce jointe contient la conversation complète avec le vocabulaire e
             'success': True,
             'message': f'Email envoyé à {recipient}'
         }
+    
