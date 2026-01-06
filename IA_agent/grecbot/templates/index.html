@@ -31,7 +31,7 @@
 
         <div class="input-area">
             <button id="micBtn" class="btn-mic" title="Πατήστε για να μιλήσετε">🎤</button>
-            <input type="text" id="userInput" placeholder="Γράψε ή μίλα..." autocomplete="off">
+            <textarea id="userInput" placeholder="Γράψε ή μίλα..." rows="1"></textarea>
             <button id="sendBtn" title="Envoyer le message">➤</button>
         </div>
     </div>
@@ -47,6 +47,5 @@
     <script src="{{ url_for('static', filename='js/pdf-export.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
-
 
 </html>

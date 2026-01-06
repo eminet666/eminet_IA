@@ -134,6 +134,10 @@ async function sendMessage() {
     
     addMessage(message, true);
     userInput.value = '';
+    
+    // Réinitialiser la hauteur du textarea
+    userInput.style.height = 'auto';
+    
     sendBtn.disabled = true;
     showLoading(true);
     
@@ -170,5 +174,4 @@ async function sendMessage() {
         sendBtn.disabled = false;
         userInput.focus();
     }
-    
 }
