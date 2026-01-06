@@ -68,12 +68,13 @@ class GroqService:
         self.model = Config.GROQ_WHISPER_MODEL
         self.api_url = "https://api.groq.com/openai/v1/audio/transcriptions"
     
-    def transcribe(self, audio_bytes):
+    def transcribe(self, audio_bytes, prompt_hint=None):
         """
         Transcrire des données audio en texte
         
         Args:
             audio_bytes (bytes): Données audio brutes
+            prompt_hint (str, optional): Contexte pour améliorer la reconnaissance
         
         Returns:
             str: Texte transcrit
@@ -92,11 +93,17 @@ class GroqService:
         try:
             headers = {"Authorization": f"Bearer {self.api_key}"}
             
+            # Prompt par défaut pour aider la reconnaissance
+            if not prompt_hint:
+                prompt_hint = "Σωκράτης, φιλοσοφία, σοφία, αρετή, γνώση, διάλογος"
+            
             with open(temp_path, 'rb') as audio_file:
                 files = {
                     'file': ('audio.webm', audio_file, 'audio/webm'),
                     'model': (None, self.model),
-                    'language': (None, 'el')
+                    'language': (None, 'el'),
+                    'temperature': (None, '0.2'),  # Plus conservateur pour meilleure précision
+                    'prompt': (None, prompt_hint)  # Aide à la reconnaissance
                 }
                 
                 response = requests.post(self.api_url, headers=headers, files=files)
@@ -105,7 +112,10 @@ class GroqService:
             if 'error' in result:
                 raise Exception(result.get('error', {}).get('message', 'Erreur inconnue'))
             
-            return result.get('text', '').strip()
+            transcribed_text = result.get('text', '').strip()
+            print(f"[Groq] Transcription: {transcribed_text}", file=sys.stderr)
+            
+            return transcribed_text
             
         finally:
             if os.path.exists(temp_path):

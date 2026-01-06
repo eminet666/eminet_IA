@@ -11,28 +11,58 @@ if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in win
     recognition = new SpeechRecognition();
     recognition.lang = 'el-GR';
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true; // Afficher les résultats intermédiaires
+    recognition.maxAlternatives = 3; // Plus d'alternatives pour améliorer la précision
     
     recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
-        isRecording = false;
-        micBtn.classList.remove('recording');
-        sendMessage();
+        let interimTranscript = '';
+        let finalTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        // Afficher les résultats intermédiaires
+        if (interimTranscript) {
+            userInput.value = interimTranscript;
+            userInput.style.color = '#999'; // Gris pour indiquer que c'est temporaire
+        }
+        
+        // Résultat final
+        if (finalTranscript) {
+            userInput.value = finalTranscript;
+            userInput.style.color = ''; // Couleur normale
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            // Ne pas envoyer automatiquement - laisser l'utilisateur vérifier
+            userInput.focus();
+        }
     };
     
     recognition.onerror = function(event) {
         console.error('Erreur reconnaissance vocale:', event.error);
         isRecording = false;
         micBtn.classList.remove('recording');
+        userInput.style.color = '';
+        
         if (event.error === 'no-speech') {
-            alert('Aucune parole détectée. Réessayez.');
+            alert('Aucune parole détectée. Parlez plus fort ou rapprochez-vous du micro.');
+        } else if (event.error === 'audio-capture') {
+            alert('Erreur micro. Vérifiez les permissions.');
+        } else if (event.error === 'network') {
+            alert('Erreur réseau. Vérifiez votre connexion.');
         }
     };
     
     recognition.onend = function() {
         isRecording = false;
         micBtn.classList.remove('recording');
+        userInput.style.color = '';
     };
 }
 
@@ -40,7 +70,18 @@ if (!isIOS && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in win
 
 async function startMobileRecording() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Afficher un message de feedback
+        userInput.value = '🎤 Enregistrement en cours...';
+        userInput.style.color = '#ff4444';
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+                sampleRate: 48000 // Meilleure qualité audio
+            } 
+        });
         
         const options = { mimeType: 'audio/webm' };
         if (!MediaRecorder.isTypeSupported(options.mimeType)) {
@@ -55,6 +96,8 @@ async function startMobileRecording() {
         };
         
         mediaRecorder.onstop = async function() {
+            userInput.value = '⏳ Transcription en cours...';
+            
             const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
             
             const reader = new FileReader();
@@ -65,20 +108,34 @@ async function startMobileRecording() {
                     const response = await fetch('/transcribe', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ audio: base64Audio })
+                        body: JSON.stringify({ 
+                            audio: base64Audio,
+                            prompt: 'Transcription en grec moderne, niveau C1. Mots courants: φιλοσοφία, σοφία, αρετή, γνώση' // Aide à la reconnaissance
+                        })
                     });
                     
                     const data = await response.json();
                     
                     if (data.success) {
                         userInput.value = data.text;
-                        sendMessage();
+                        userInput.style.color = '#4CAF50'; // Vert pour indiquer succès
+                        // Ne pas envoyer automatiquement - laisser l'utilisateur vérifier
+                        userInput.focus();
+                        
+                        // Remettre la couleur normale après 2 secondes
+                        setTimeout(() => {
+                            userInput.style.color = '';
+                        }, 2000);
                     } else {
+                        userInput.value = '';
+                        userInput.style.color = '';
                         alert('Erreur de transcription: ' + (data.error || 'Inconnu'));
                     }
                 } catch (error) {
                     console.error('Transcription error:', error);
-                    alert('Erreur lors de la transcription');
+                    userInput.value = '';
+                    userInput.style.color = '';
+                    alert('Erreur lors de la transcription. Vérifiez votre connexion.');
                 }
             };
             reader.readAsDataURL(audioBlob);
@@ -90,9 +147,23 @@ async function startMobileRecording() {
         isRecording = true;
         micBtn.classList.add('recording');
         
+        // Auto-stop après 10 secondes maximum
+        setTimeout(() => {
+            if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+                stopMobileRecording();
+            }
+        }, 10000);
+        
     } catch (error) {
         console.error('Erreur micro:', error);
-        alert('Impossible d\'accéder au microphone: ' + error.message);
+        userInput.value = '';
+        userInput.style.color = '';
+        
+        if (error.name === 'NotAllowedError') {
+            alert('Permission micro refusée. Autorisez l\'accès au micro dans les paramètres de votre navigateur.');
+        } else {
+            alert('Impossible d\'accéder au microphone: ' + error.message);
+        }
     }
 }
 
@@ -124,6 +195,8 @@ function toggleRecording() {
         recognition.start();
         isRecording = true;
         micBtn.classList.add('recording');
+        userInput.value = '🎤 Parlez maintenant...';
+        userInput.style.color = '#ff4444';
     }
 }
 
@@ -184,7 +257,7 @@ function speakTextFallback(text) {
     window.speechSynthesis.cancel();
     
     // Nettoyer le texte des emojis
-    const cleanText = text.replace(/[🔊🇫🇷🎤➤😉!.…]/g, ' ').trim();
+    const cleanText = text.replace(/[🔊🇫🇷🎤➤😉!.…⏳]/g, ' ').trim();
     
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'el-GR';

@@ -159,6 +159,8 @@ def transcribe():
             return jsonify({'error': 'Groq API key not configured', 'success': False}), 500
         
         audio_data = request.json.get('audio', '')
+        prompt_hint = request.json.get('prompt', None)  # Contexte optionnel
+        
         if not audio_data:
             return jsonify({'error': 'Pas de données audio'}), 400
         
@@ -167,12 +169,17 @@ def transcribe():
             audio_data = audio_data.split(',')[1]
         audio_bytes = base64.b64decode(audio_data)
         
-        # Transcrire
-        text = groq.transcribe(audio_bytes)
+        print(f"[Transcribe] Audio reçu: {len(audio_bytes)} bytes", file=sys.stderr)
+        
+        # Transcrire avec contexte
+        text = groq.transcribe(audio_bytes, prompt_hint)
+        
+        print(f"[Transcribe] Résultat: {text}", file=sys.stderr)
+        
         return jsonify({'text': text, 'success': True})
         
     except Exception as e:
-        print(f"Transcription error: {e}")
+        print(f"Transcription error: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'success': False}), 500
@@ -216,4 +223,5 @@ if __name__ == '__main__':
     print("🇬🇷 Σωκράτης 2.0")
     print("=" * 60)
     print("🔊 Voix: Edge TTS (Nestoras Neural - gratuit illimité)")
+    print("🎤 Reconnaissance: Groq Whisper avec contexte")
     app.run(debug=True, host='0.0.0.0', port=5000)
