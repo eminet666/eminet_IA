@@ -6,7 +6,7 @@ Architecture intermédiaire :
 - app.py : Routes + logique (ce fichier)
 - config.py : Configuration
 - prompts.py : Prompts système
-- services.py : Services (Mistral, Groq, Email)
+- services.py : Services (Mistral, Groq, Email, Edge TTS)
 """
 from flask import Flask, render_template, request, jsonify, session
 import json
@@ -14,7 +14,7 @@ import re
 import base64
 from config import Config
 from prompts import get_system_prompt, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
-from services import MistralService, GroqService
+from services import MistralService, GroqService, EdgeTTSService
 
 # Initialisation
 app = Flask(__name__)
@@ -24,6 +24,7 @@ Config.validate()
 # Services
 mistral = MistralService()
 groq = GroqService()
+edge_tts = EdgeTTSService()
 
 
 # ==================== UTILITAIRES ====================
@@ -176,10 +177,34 @@ def transcribe():
         return jsonify({'error': str(e), 'success': False}), 500
 
 
+@app.route('/speak', methods=['POST'])
+def speak():
+    """Synthèse vocale avec Edge TTS (gratuit illimité)"""
+    try:
+        text = request.json.get('text', '').strip()
+        if not text:
+            return jsonify({'error': 'Texte vide'}), 400
+        
+        # Générer l'audio
+        audio_base64 = edge_tts.text_to_speech(text)
+        
+        return jsonify({
+            'audio': audio_base64,
+            'success': True
+        })
+        
+    except Exception as e:
+        print(f"TTS error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'success': False}), 500
+
+
 # ==================== LANCEMENT ====================
 
 if __name__ == '__main__':
     print("=" * 60)
     print("🇬🇷 Σωκράτης 2.0")
     print("=" * 60)
+    print("🔊 Voix: Edge TTS (Nestoras Neural - gratuit illimité)")
     app.run(debug=True, host='0.0.0.0', port=5000)

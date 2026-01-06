@@ -1,6 +1,6 @@
 """
 Services pour l'application Σωκράτης 2.0
-Regroupe les services Mistral, Groq et Email
+Regroupe les services Mistral, Groq, Email et Edge TTS
 """
 from mistralai import Mistral
 import requests
@@ -13,6 +13,9 @@ from email.mime.base import MIMEBase
 from email import encoders
 from datetime import datetime
 from config import Config
+import base64
+import asyncio
+import edge_tts
 
 
 # ==================== MISTRAL SERVICE ====================
@@ -106,6 +109,66 @@ class GroqService:
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
+
+
+# ==================== EDGE TTS SERVICE (GRATUIT) ====================
+
+class EdgeTTSService:
+    """Service pour la synthèse vocale avec Edge TTS (Microsoft, gratuit illimité)"""
+    
+    def __init__(self):
+        # Voix grecque masculine disponibles :
+        # el-GR-NestorasNeural (homme, neutre, recommandé pour Socrate)
+        self.voice = "el-GR-NestorasNeural"
+        self.rate = "-15%"  # Légèrement plus lent (Socrate réfléchi)
+        self.pitch = "-5Hz"  # Voix plus grave
+    
+    async def _generate_audio(self, text):
+        """Générer l'audio de manière asynchrone"""
+        communicate = edge_tts.Communicate(
+            text=text,
+            voice=self.voice,
+            rate=self.rate,
+            pitch=self.pitch
+        )
+        
+        audio_data = b""
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_data += chunk["data"]
+        
+        return audio_data
+    
+    def text_to_speech(self, text):
+        """
+        Convertir du texte en audio avec voix masculine grecque
+        
+        Args:
+            text (str): Texte à synthétiser
+        
+        Returns:
+            str: Audio encodé en base64 (format MP3)
+        
+        Raises:
+            Exception: Si la synthèse échoue
+        """
+        try:
+            # Nettoyer le texte des emojis
+            clean_text = text.replace('🔊', '').replace('🇫🇷', '').replace('🎤', '').replace('➤', '').strip()
+            
+            # Exécuter la fonction async
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            audio_bytes = loop.run_until_complete(self._generate_audio(clean_text))
+            loop.close()
+            
+            # Encoder en base64
+            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+            
+            return audio_base64
+            
+        except Exception as e:
+            raise Exception(f"Erreur Edge TTS: {str(e)}")
 
 
 # ==================== EMAIL SERVICE ====================

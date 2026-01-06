@@ -1,1 +1,8 @@
 https://grecbot.onrender.com/
+
+# fichiers à partager avec claude IA
+# app.py (routes)
+# config.py (configuration)
+# prompts.py (prompts AI)
+# services.py (services Mistral/Groq/Email)
+# index.html + JS (frontend)"

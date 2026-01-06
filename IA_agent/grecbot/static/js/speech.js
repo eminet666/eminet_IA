@@ -129,7 +129,53 @@ function toggleRecording() {
 
 // ==================== SYNTHÈSE VOCALE (TEXT-TO-SPEECH) ====================
 
-function speakText(text) {
+/**
+ * Lire un texte avec Edge TTS (via serveur)
+ * Fallback vers Web Speech API si Edge TTS n'est pas disponible
+ */
+async function speakText(text) {
+    try {
+        // Essayer d'abord avec Edge TTS
+        const response = await fetch('/speak', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.audio) {
+            // Décoder et jouer l'audio MP3
+            const audioData = atob(data.audio);
+            const arrayBuffer = new ArrayBuffer(audioData.length);
+            const view = new Uint8Array(arrayBuffer);
+            for (let i = 0; i < audioData.length; i++) {
+                view[i] = audioData.charCodeAt(i);
+            }
+            
+            const blob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+            const audioUrl = URL.createObjectURL(blob);
+            const audio = new Audio(audioUrl);
+            
+            audio.onended = function() {
+                URL.revokeObjectURL(audioUrl);
+            };
+            
+            audio.play();
+            return;
+        }
+    } catch (error) {
+        console.warn('Edge TTS non disponible, fallback vers Web Speech API:', error);
+    }
+    
+    // Fallback vers Web Speech API
+    speakTextFallback(text);
+}
+
+/**
+ * Fallback : Synthèse vocale avec Web Speech API
+ */
+function speakTextFallback(text) {
     if (!('speechSynthesis' in window)) {
         alert('Synthèse vocale non supportée.');
         return;
@@ -171,5 +217,4 @@ function speakText(text) {
         }
         window.speechSynthesis.speak(utterance);
     }
-    
 }
