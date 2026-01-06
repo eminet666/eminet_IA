@@ -97,7 +97,7 @@ async function generatePDF() {
                 margin: [0, 0, 0, 15]
             });
             
-            // Chaque mot
+            // Chaque mot en format compact
             enrichedVocab.forEach(function(word, index) {
                 const wordContent = [];
                 
@@ -183,103 +183,37 @@ async function generatePDF() {
     }
 }
 
-// ==================== ENVOI PAR EMAIL ====================
+// ==================== TÉLÉCHARGEMENT PDF ====================
 
 /**
- * Générer le PDF et l'envoyer par email
+ * Générer et télécharger le PDF directement
  */
 async function emailPDF() {
     emailBtn.disabled = true;
-    emailBtn.textContent = 'Envoi...';
+    emailBtn.textContent = 'Génération...';
     
     try {
         // 1. Générer le PDF
         const pdfBlob = await generatePDF();
         if (!pdfBlob) return;
         
-        // 2. Extraire le dialogue pour le corps de l'email
-        const messages = chatBox.querySelectorAll('.message');
-        let dialogueText = '';
+        // 2. Télécharger directement
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         
-        messages.forEach(function(msg) {
-            const isUser = msg.classList.contains('user');
-            const textEl = msg.querySelector('.message-text');
-            const text = textEl ? textEl.textContent.trim() : '';
-            
-            if (text) {
-                if (isUser) {
-                    dialogueText += `\nVous: ${text}\n`;
-                } else {
-                    dialogueText += `\nΣωκράτης: ${text}\n`;
-                }
-            }
-        });
-        
-        // 3. Convertir le Blob en base64
-        const reader = new FileReader();
-        reader.onloadend = async function() {
-            const pdfBase64 = reader.result;
-            
-            // 4. Envoyer par email
-            try {
-                const emailResponse = await fetch('/send-pdf-email', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        pdf: pdfBase64,
-                        dialogue: dialogueText,
-                        email: 'eminet666@gmail.com'
-                    }),
-                    signal: AbortSignal.timeout(120000)
-                });
-                
-                if (!emailResponse.ok) {
-                    const errorText = await emailResponse.text();
-                    console.error('Erreur serveur:', errorText);
-                    throw new Error(`Erreur serveur (${emailResponse.status})`);
-                }
-                
-                const emailData = await emailResponse.json();
-                
-                if (emailData.success) {
-                    alert('✅ PDF envoyé par email à eminet666@gmail.com !');
-                } else {
-                    throw new Error(emailData.error || 'Erreur inconnue');
-                }
-            } catch (emailError) {
-                console.error('Erreur email:', emailError);
-                
-                const download = confirm(
-                    '⚠️ Impossible d\'envoyer l\'email.\n\n' + 
-                    emailError.message + 
-                    '\n\nVoulez-vous télécharger le PDF localement ?'
-                );
-                
-                if (download) {
-                    // Télécharger le PDF
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Socrate_${new Date().toISOString().split('T')[0]}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    alert('✅ PDF téléchargé !');
-                }
-            } finally {
-                emailBtn.disabled = false;
-                emailBtn.textContent = 'PDF';
-            }
-        };
-        
-        reader.readAsDataURL(pdfBlob);
+        alert('✅ PDF téléchargé !');
         
     } catch (error) {
         console.error('Erreur:', error);
         alert('❌ Erreur: ' + error.message);
+    } finally {
         emailBtn.disabled = false;
         emailBtn.textContent = 'PDF';
     }
-    
 }
