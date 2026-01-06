@@ -12,6 +12,7 @@ from flask import Flask, render_template, request, jsonify, session
 import json
 import re
 import base64
+import sys
 from config import Config
 from prompts import get_system_prompt, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
 from services import MistralService, GroqService, EdgeTTSService
@@ -180,13 +181,21 @@ def transcribe():
 @app.route('/speak', methods=['POST'])
 def speak():
     """Synthèse vocale avec Edge TTS (gratuit illimité)"""
+    print("[SPEAK] Début de la requête", file=sys.stderr)
+    
     try:
         text = request.json.get('text', '').strip()
         if not text:
+            print("[SPEAK] Erreur: texte vide", file=sys.stderr)
             return jsonify({'error': 'Texte vide'}), 400
         
+        print(f"[SPEAK] Texte reçu: {text[:100]}...", file=sys.stderr)
+        
         # Générer l'audio
+        print("[SPEAK] Appel à edge_tts.text_to_speech...", file=sys.stderr)
         audio_base64 = edge_tts.text_to_speech(text)
+        
+        print(f"[SPEAK] Audio généré avec succès: {len(audio_base64)} caractères base64", file=sys.stderr)
         
         return jsonify({
             'audio': audio_base64,
@@ -194,7 +203,7 @@ def speak():
         })
         
     except Exception as e:
-        print(f"TTS error: {e}")
+        print(f"[SPEAK] ERREUR: {type(e).__name__}: {str(e)}", file=sys.stderr)
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'success': False}), 500

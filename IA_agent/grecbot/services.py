@@ -16,6 +16,7 @@ from config import Config
 import base64
 import asyncio
 import edge_tts
+import sys
 
 
 # ==================== MISTRAL SERVICE ====================
@@ -125,19 +126,23 @@ class EdgeTTSService:
     
     async def _generate_audio(self, text):
         """Générer l'audio de manière asynchrone"""
-        communicate = edge_tts.Communicate(
-            text=text,
-            voice=self.voice,
-            rate=self.rate,
-            pitch=self.pitch
-        )
-        
-        audio_data = b""
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data += chunk["data"]
-        
-        return audio_data
+        try:
+            communicate = edge_tts.Communicate(
+                text=text,
+                voice=self.voice,
+                rate=self.rate,
+                pitch=self.pitch
+            )
+            
+            audio_data = b""
+            async for chunk in communicate.stream():
+                if chunk["type"] == "audio":
+                    audio_data += chunk["data"]
+            
+            return audio_data
+        except Exception as e:
+            print(f"Erreur lors de la génération audio: {e}", file=sys.stderr)
+            raise
     
     def text_to_speech(self, text):
         """
@@ -156,11 +161,21 @@ class EdgeTTSService:
             # Nettoyer le texte des emojis
             clean_text = text.replace('🔊', '').replace('🇫🇷', '').replace('🎤', '').replace('➤', '').strip()
             
+            print(f"[EdgeTTS] Génération audio pour: {clean_text[:50]}...", file=sys.stderr)
+            
+            # Créer ou récupérer la boucle d'événements
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_closed():
+                    raise RuntimeError("Loop is closed")
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
             # Exécuter la fonction async
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
             audio_bytes = loop.run_until_complete(self._generate_audio(clean_text))
-            loop.close()
+            
+            print(f"[EdgeTTS] Audio généré: {len(audio_bytes)} bytes", file=sys.stderr)
             
             # Encoder en base64
             audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
@@ -168,6 +183,9 @@ class EdgeTTSService:
             return audio_base64
             
         except Exception as e:
+            print(f"[EdgeTTS] ERREUR: {type(e).__name__}: {str(e)}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
             raise Exception(f"Erreur Edge TTS: {str(e)}")
 
 
