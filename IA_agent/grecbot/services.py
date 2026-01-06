@@ -17,6 +17,7 @@ import base64
 import asyncio
 import edge_tts
 import sys
+import re
 
 
 # ==================== MISTRAL SERVICE ====================
@@ -67,6 +68,45 @@ class GroqService:
         self.api_key = Config.GROQ_API_KEY
         self.model = Config.GROQ_WHISPER_MODEL
         self.api_url = "https://api.groq.com/openai/v1/audio/transcriptions"
+        
+        # Dictionnaire de corrections phonétiques courantes
+        self.phonetic_corrections = {
+            # Erreurs de transcription courantes
+            r'\bσα\b': 'θα',           # σα → θα (futur)
+            r'\bτα\b': 'θα',           # τα → θα (futur)
+            r'\bδεν\s+σα\b': 'δεν θα', # δεν σα → δεν θα
+            r'\bσε\s+σα\b': 'θα σε',   # σε σα → θα σε
+            
+            # Autres confusions phonétiques
+            r'\bδα\b': 'θα',           # δα → θα
+            r'\bσαν\b': 'θαν',         # σαν → θαν (comme si)
+            
+            # Corrections de particules
+            r'\bνα\s+σα\b': 'να θα',   # να σα → να θα
+            r'\bαν\s+σα\b': 'αν θα',   # αν σα → αν θα
+            
+            # Mots composés mal séparés
+            r'\bτι\s+σα\b': 'τι θα',   # τι σα → τι θα
+            r'\bπως\s+σα\b': 'πως θα', # πως σα → πως θα
+        }
+    
+    def _post_correct_transcription(self, text):
+        """
+        Corriger les erreurs phonétiques courantes dans la transcription
+        
+        Args:
+            text (str): Texte transcrit
+        
+        Returns:
+            str: Texte corrigé
+        """
+        corrected = text
+        
+        # Appliquer toutes les corrections
+        for pattern, replacement in self.phonetic_corrections.items():
+            corrected = re.sub(pattern, replacement, corrected, flags=re.IGNORECASE)
+        
+        return corrected
     
     def transcribe(self, audio_bytes, prompt_hint=None):
         """
@@ -77,7 +117,7 @@ class GroqService:
             prompt_hint (str, optional): Contexte pour améliorer la reconnaissance
         
         Returns:
-            str: Texte transcrit
+            str: Texte transcrit et corrigé
         
         Raises:
             Exception: Si la transcription échoue
@@ -93,17 +133,20 @@ class GroqService:
         try:
             headers = {"Authorization": f"Bearer {self.api_key}"}
             
-            # Prompt par défaut pour aider la reconnaissance
+            # Prompt enrichi avec vocabulaire C1 et mots courants
             if not prompt_hint:
-                prompt_hint = "Σωκράτης, φιλοσοφία, σοφία, αρετή, γνώση, διάλογος"
+                prompt_hint = (
+                    "Σωκράτης, φιλοσοφία, σοφία, αρετή, γνώση, διάλογος, "
+                    "θα, θαν, δεν θα, να θα, αν θα, πώς θα, τι θα"
+                )
             
             with open(temp_path, 'rb') as audio_file:
                 files = {
                     'file': ('audio.webm', audio_file, 'audio/webm'),
                     'model': (None, self.model),
                     'language': (None, 'el'),
-                    'temperature': (None, '0.2'),  # Plus conservateur pour meilleure précision
-                    'prompt': (None, prompt_hint)  # Aide à la reconnaissance
+                    'temperature': (None, '0.0'),  # Maximum de précision
+                    'prompt': (None, prompt_hint)
                 }
                 
                 response = requests.post(self.api_url, headers=headers, files=files)
@@ -113,9 +156,15 @@ class GroqService:
                 raise Exception(result.get('error', {}).get('message', 'Erreur inconnue'))
             
             transcribed_text = result.get('text', '').strip()
-            print(f"[Groq] Transcription: {transcribed_text}", file=sys.stderr)
+            print(f"[Groq] Transcription brute: {transcribed_text}", file=sys.stderr)
             
-            return transcribed_text
+            # Post-correction
+            corrected_text = self._post_correct_transcription(transcribed_text)
+            
+            if corrected_text != transcribed_text:
+                print(f"[Groq] Après correction: {corrected_text}", file=sys.stderr)
+            
+            return corrected_text
             
         finally:
             if os.path.exists(temp_path):
