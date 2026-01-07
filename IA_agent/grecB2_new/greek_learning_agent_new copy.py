@@ -41,7 +41,7 @@ client = Mistral(api_key=MISTRAL_API_KEY)
 
 def generate_greek_dialogue():
     prompt = """
-    Crée un dialogue en grec moderne (niveau B2) entre Stephanos et Anna, sur le sujet suivant : {sujet}
+    Crée un dialogue en grec moderne (niveau C1) entre Stephanos et Anna, sur le sujet suivant : {sujet}
     
     Le dialogue doit faire environ une page A4 (environ 500 mots).
     
@@ -86,7 +86,22 @@ def generate_greek_dialogue():
     sujets = [
         "Les courses au marché", "Un dîner en famille",
         "Une sortie au cinéma", "Un problème de voisinage",
-        "Un voyage en bus", "Une discussion sur la météo"
+        "Un voyage en bus", "Une discussion sur la météo", "Les plans pour le week-end",
+        "Une visite chez le médecin", "L'organisation d'une fête", "Une conversation au café",
+        "Les activités de loisirs", "Une dispute amicale", "Les traditions grecques",
+        "Une journée à la plage", "Les transports en commun", "les voyages en bateau"
+        "Une rencontre imprévue", "Les habitudes alimentaires",
+        "Les projets de vacances", "Une visite culturelle", "la littérature grecque", 
+        "la Crète", "Chios", "Samos", "Athènes", "Thessalonique", "Les îles grecques",
+        "La Thessalie", "les séries grecques populaires", "le cinéma grec", "la musique grecque contemporaine"
+        "le rébétiko", "la cuisine grecque traditionnelle", "les sites archéologiques en Grèce",
+        "les musées archéologiques", "l'histoire de la Grèce antique", "la mythologie grecque",
+        "les fêtes religieuses en Grèce", "la guerre d'indépendance grecque",
+        "la vie quotidienne en Grèce moderne", "l'histoire moderne de la Grèce", "la politique en Grèce contemporaine"
+        "les grands philosophes grecs", "la démocratie athénienne", "les Jeux Olympiques antiques",
+        "la philosophie stoïcienne", "les écoles philosophiques grecques", "la statuaire grecque antique",
+        "un rapprochement amoureux", "une discussion de séduction", "une conversation sur les relations amoureuses"
+
     ]
     
     sujet = sujets[datetime.now().day % len(sujets)]
@@ -217,51 +232,51 @@ def generate_pdf_from_dialogue(html_content, title=None, output_file="dialogue_g
         <style>
             @page {{
                 size: A4;
-                margin: 2cm;
+                margin: 1.5cm;
             }}
             
             body {{
                 font-family: 'Arial', 'Helvetica', sans-serif;
-                line-height: 1.6;
+                line-height: 1.4;
                 color: #333;
+                font-size: 11pt;
             }}
             
             .header {{
                 text-align: center;
-                margin-bottom: 30px;
-                padding-bottom: 20px;
-                border-bottom: 3px solid #3498db;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #3498db;
             }}
             
             .header h1 {{
                 color: #2c3e50;
-                font-size: 28px;
-                margin: 10px 0;
+                font-size: 20px;
+                margin: 5px 0;
             }}
             
             .header .date {{
                 color: #7f8c8d;
-                font-size: 14px;
+                font-size: 11px;
             }}
             
             .dialogue {{
                 background-color: #f9f9f9;
-                padding: 20px;
-                border-radius: 8px;
-                border-left: 4px solid #3498db;
-                margin-bottom: 30px;
+                padding: 12px;
+                border-radius: 5px;
+                margin-bottom: 15px;
             }}
             
             .dialogue h3 {{
                 color: #34495e;
                 margin-top: 0;
-                margin-bottom: 20px;
-                font-size: 22px;
+                margin-bottom: 12px;
+                font-size: 16px;
             }}
             
             .dialogue p {{
-                margin: 12px 0;
-                font-size: 14px;
+                margin: 6px 0;
+                font-size: 11pt;
             }}
             
             .dialogue strong {{
@@ -270,36 +285,38 @@ def generate_pdf_from_dialogue(html_content, title=None, output_file="dialogue_g
             }}
             
             .vocab-section {{
-                margin-top: 30px;
-                page-break-before: auto;
+                margin-top: 15px;
             }}
             
             .vocab-section h3 {{
                 color: #2c3e50;
                 border-bottom: 2px solid #3498db;
-                padding-bottom: 10px;
-                font-size: 20px;
+                padding-bottom: 5px;
+                font-size: 16px;
+                margin-bottom: 10px;
             }}
             
             .vocab-table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 20px;
-                font-size: 13px;
+                margin-top: 10px;
+                font-size: 11pt;
             }}
             
             .vocab-table th {{
                 background-color: #3498db;
                 color: white;
-                padding: 10px 8px;
+                padding: 4px 4px;
                 text-align: left;
                 font-weight: bold;
+                font-size: 11pt;
             }}
             
             .vocab-table td {{
                 border: 1px solid #ddd;
-                padding: 8px;
+                padding: 3px 4px;
                 vertical-align: top;
+                line-height: 1.3;
             }}
             
             .vocab-table tr:nth-child(even) {{
@@ -309,30 +326,35 @@ def generate_pdf_from_dialogue(html_content, title=None, output_file="dialogue_g
             .vocab-table td:first-child {{
                 font-weight: bold;
                 color: #2c3e50;
+                width: 18%;
+            }}
+            
+            .vocab-table td:nth-child(2) {{
+                width: 22%;
+            }}
+            
+            .vocab-table td:nth-child(3) {{
+                width: 60%;
             }}
             
             .footer {{
-                margin-top: 40px;
-                padding-top: 20px;
-                border-top: 2px solid #ecf0f1;
+                margin-top: 20px;
+                padding-top: 10px;
+                border-top: 1px solid #ecf0f1;
                 text-align: center;
                 color: #7f8c8d;
-                font-size: 12px;
+                font-size: 11pt;
             }}
         </style>
     </head>
     <body>
         <div class="header">
-            <h1>🇬🇷 {pdf_title}</h1>
-            <div class="date">📅 {datetime.now().strftime('%d/%m/%Y')}</div>
+            <h1>{pdf_title}</h1>
+            <div class="date">{datetime.now().strftime('%d/%m/%Y')}</div>
         </div>
         
         <div class="dialogue">
             {html_content}
-        </div>
-        
-        <div class="footer">
-            Dialogue grec quotidien - Niveau B2
         </div>
     </body>
     </html>
@@ -352,7 +374,7 @@ def generate_pdf_from_dialogue(html_content, title=None, output_file="dialogue_g
 
 def send_email(content, audio_file=None, pdf_file=None, title=None):
     # Liste des destinataires
-    recipients = ["eminet666@gmail.com", "eminet@wanadoo.fr"]
+    recipients = ["eminet666@gmail.com", "anne.lafond@ensaama.net"]
     
     msg = MIMEMultipart()
     msg["From"] = GMAIL_USER
@@ -365,7 +387,7 @@ def send_email(content, audio_file=None, pdf_file=None, title=None):
         msg["Subject"] = "Ton dialogue grec quotidien 🎧"
     
     # Titre pour l'en-tête de l'email
-    email_title = f"🇬🇷 {title}" if title else "🇬🇷 Dialogue en grec moderne"
+    email_title = f"{title}" if title else "Dialogue en grec moderne"
     
     # Message d'information sur les pièces jointes
     attachments_info = []
@@ -390,46 +412,61 @@ def send_email(content, audio_file=None, pdf_file=None, title=None):
             <style>
                 body {{ 
                     font-family: Arial, sans-serif; 
-                    line-height: 1.8; 
+                    line-height: 1.5; 
                     max-width: 800px; 
                     margin: 0 auto; 
-                    padding: 20px;
+                    padding: 15px;
+                    font-size: 14px;
                 }}
                 h2 {{ 
                     color: #2c3e50; 
-                    border-bottom: 3px solid #3498db;
-                    padding-bottom: 10px;
+                    border-bottom: 2px solid #3498db;
+                    padding-bottom: 8px;
+                    margin-bottom: 12px;
+                    font-size: 20px;
                 }}
                 h3 {{
                     color: #34495e;
-                    margin-top: 30px;
+                    margin-top: 15px;
+                    margin-bottom: 10px;
+                    font-size: 16px;
+                }}
+                .audio-notice {{
+                    background-color: #e8f4f8;
+                    padding: 10px;
+                    border-radius: 4px;
+                    margin: 12px 0;
+                    font-size: 12px;
                 }}
                 .dialogue {{ 
                     background-color: #f9f9f9; 
-                    padding: 20px; 
-                    border-radius: 8px;
-                    border-left: 4px solid #3498db;
+                    padding: 12px; 
+                    border-radius: 5px;
                 }}
                 .dialogue p {{
-                    margin: 10px 0;
+                    margin: 6px 0;
                 }}
                 .vocab-table {{ 
                     border-collapse: collapse; 
                     width: 100%; 
-                    margin-top: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    margin-top: 12px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                    font-size: 14px;
                 }}
                 .vocab-table th {{ 
                     background-color: #3498db; 
                     color: white;
-                    padding: 12px 8px;
+                    padding: 5px 4px;
                     text-align: left;
                     font-weight: bold;
+                    font-size: 14px;
                 }}
                 .vocab-table td {{ 
                     border: 1px solid #ddd; 
-                    padding: 10px 8px; 
+                    padding: 4px 5px; 
                     text-align: left; 
+                    vertical-align: top;
+                    line-height: 1.3;
                 }}
                 .vocab-table tr:nth-child(even) {{
                     background-color: #f9f9f9;
@@ -437,18 +474,19 @@ def send_email(content, audio_file=None, pdf_file=None, title=None):
                 .vocab-table tr:hover {{
                     background-color: #e8f4f8;
                 }}
-                .audio-notice {{
-                    background-color: #e8f4f8;
-                    padding: 15px;
-                    border-radius: 5px;
-                    margin: 20px 0;
-                    border-left: 4px solid #3498db;
+                .vocab-table td:first-child {{
+                    width: 18%;
+                }}
+                .vocab-table td:nth-child(2) {{
+                    width: 22%;
+                }}
+                .vocab-table td:nth-child(3) {{
+                    width: 60%;
                 }}
             </style>
         </head>
         <body>
             <h2>{email_title}</h2>
-            {attachments_html}
             <div class="dialogue">
                 {content}
             </div>

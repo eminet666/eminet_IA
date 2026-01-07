@@ -7,18 +7,13 @@ from email.mime.base import MIMEBase
 from email import encoders
 from mistralai import Mistral
 from datetime import datetime
-from gtts import gTTS
+import edge_tts
+import asyncio
 from pydub import AudioSegment
-from pydub.utils import which
 import re
 import tempfile
 from weasyprint import HTML, CSS
 from io import BytesIO
-
-# Configuration de ffmpeg pour Windows (si nécessaire)
-# Décommenter et ajuster le chemin si ffmpeg n'est pas dans le PATH
-# AudioSegment.converter = r"C:\ffmpeg\bin\ffmpeg.exe"
-# AudioSegment.ffprobe = r"C:\ffmpeg\bin\ffprobe.exe"
 
 # Charger le fichier .env
 load_dotenv()
@@ -148,43 +143,37 @@ def extract_dialogue_lines(html_content):
     
     return dialogue_lines
 
-def generate_audio_from_dialogue(dialogue_lines, output_file="dialogue.mp3"):
+async def generate_audio_from_dialogue_async(dialogue_lines, output_file="dialogue.mp3"):
     """
     Génère un fichier audio MP3 à partir des répliques du dialogue
-    avec des voix différenciées pour Stephanos (homme) et Anna (femme)
+    avec edge-tts pour des voix grecques naturelles
     """
     if not dialogue_lines:
         print("⚠️  Aucune réplique trouvée dans le dialogue")
         return None
     
-    print(f"- Génération audio de {len(dialogue_lines)} répliques...")
+    print(f"- Génération audio de {len(dialogue_lines)} répliques avec edge-tts...")
     audio_segments = []
+    
+    # Voix edge-tts pour le grec
+    VOICES = {
+        "Stephanos": "el-GR-NestorasNeural",  # Voix masculine grecque
+        "Anna": "el-GR-AthinaNeural"          # Voix féminine grecque
+    }
     
     # Créer un dossier temporaire pour les fichiers audio
     with tempfile.TemporaryDirectory() as temp_dir:
         for i, (speaker, text) in enumerate(dialogue_lines):
             try:
-                # Générer l'audio avec gTTS (langue grecque)
-                tts = gTTS(text=text, lang='el', slow=False)
-                
-                # Sauvegarder temporairement
+                voice = VOICES[speaker]
                 temp_file = os.path.join(temp_dir, f"temp_{i}_{speaker}.mp3")
-                tts.save(temp_file)
+                
+                # Générer l'audio avec edge-tts
+                communicate = edge_tts.Communicate(text, voice)
+                await communicate.save(temp_file)
                 
                 # Charger avec pydub
                 audio = AudioSegment.from_mp3(temp_file)
-                
-                # Ajuster la tonalité (pitch) pour différencier les voix
-                if speaker == "Stephanos":
-                    # Voix plus grave pour l'homme (-10% de fréquence)
-                    audio = audio._spawn(audio.raw_data, overrides={
-                        "frame_rate": int(audio.frame_rate * 0.9)
-                    }).set_frame_rate(audio.frame_rate)
-                else:  # Anna
-                    # Voix plus aiguë pour la femme (+10% de fréquence)
-                    audio = audio._spawn(audio.raw_data, overrides={
-                        "frame_rate": int(audio.frame_rate * 1.1)
-                    }).set_frame_rate(audio.frame_rate)
                 
                 # Ajouter l'audio
                 audio_segments.append(audio)
@@ -212,6 +201,12 @@ def generate_audio_from_dialogue(dialogue_lines, output_file="dialogue.mp3"):
         print(f"✓ Audio généré : {output_file} ({len(final_audio)/1000:.1f}s)")
     
     return output_file
+
+def generate_audio_from_dialogue(dialogue_lines, output_file="dialogue.mp3"):
+    """
+    Wrapper synchrone pour la fonction asynchrone
+    """
+    return asyncio.run(generate_audio_from_dialogue_async(dialogue_lines, output_file))
 
 def generate_pdf_from_dialogue(html_content, title=None, output_file="dialogue_grec.pdf"):
     """

@@ -21,9 +21,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libfontconfig1
       
-      # Installation des dépendances Python
+      # Installation des dépendances Python (gtts remplacé par edge-tts)
       - name: Install dependencies
-        run: pip install mistralai python-dotenv gtts pydub weasyprint
+        run: pip install mistralai python-dotenv edge-tts pydub weasyprint
       
       # Exécution du script
       - name: Run agent
@@ -32,29 +32,3 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
         run: python IA_agent/grecB2_new/greek_learning_agent_new.py
-
-# backup sans sound 
-# name: Daily Greek Learning Agent
-
-# on:
-#   schedule:
-#     - cron: "0 5 * * *"  # 6h du matin à Paris (UTC+1)
-#   workflow_dispatch:  # Pour déclencher manuellement si besoin
-
-# jobs:
-#   run-agent:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
-#       - name: Set up Python
-#         uses: actions/setup-python@v4
-#         with:
-#           python-version: "3.11"
-#       - name: Install dependencies
-#         run: pip install mistralai python-dotenv
-#       - name: Run agent
-#         env:
-#           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-#           GMAIL_USER: ${{ secrets.GMAIL_USER }}
-#           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
-#         run: python IA_agent/grecB2_new/greek_learning_agent.py
