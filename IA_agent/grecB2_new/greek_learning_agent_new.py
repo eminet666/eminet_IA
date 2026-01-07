@@ -56,6 +56,13 @@ def generate_greek_dialogue():
     - Colonne 2 : Traduction en français
     - Colonne 3 : Phrase d'exemple en grec
     
+    RÈGLES IMPORTANTES POUR LE VOCABULAIRE :
+    - Pour les SUBSTANTIFS : toujours inclure l'article défini (ο, η, το)
+      Exemple : <strong>ο καιρός</strong> (pas juste "καιρός")
+    - Pour les VERBES : donner la forme au présent ET à l'aoriste selon ce format : "présent / aoriste"
+      Exemple : <strong>πηγαίνω / πήγα</strong>, <strong>τρώω / έφαγα</strong>, <strong>λέω / είπα</strong>
+    - Pour les autres mots (adjectifs, adverbes, etc.) : format normal
+    
     Utilise ce format de tableau :
     <table class="vocab-table">
         <thead>
@@ -67,7 +74,7 @@ def generate_greek_dialogue():
         </thead>
         <tbody>
             <tr>
-                <td><strong>mot grec</strong></td>
+                <td><strong>mot grec avec article OU verbe présent/aoriste</strong></td>
                 <td>traduction</td>
                 <td>phrase d'exemple</td>
             </tr>
@@ -377,9 +384,9 @@ def send_email(content, audio_file=None, pdf_file=None, title=None):
     
     # Créer le subject avec le titre si disponible
     if title:
-        msg["Subject"] = f"🎧 {title} - Dialogue grec quotidien"
+        msg["Subject"] = f"grecAgent : {title} - Dialogue grec quotidien"
     else:
-        msg["Subject"] = "Ton dialogue grec quotidien 🎧"
+        msg["Subject"] = "grecAgent : Dialogue grec quotidien 🎧"
     
     # Titre pour l'en-tête de l'email
     email_title = f"{title}" if title else "Dialogue en grec moderne"
