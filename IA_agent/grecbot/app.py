@@ -6,7 +6,7 @@ Architecture intermédiaire :
 - app.py : Routes + logique (ce fichier)
 - config.py : Configuration
 - prompts.py : Prompts système
-- services.py : Services (Mistral, Groq, Email, Edge TTS)
+- services.py : Services (Mistral, Groq, Email, Azure Speech)
 """
 from flask import Flask, render_template, request, jsonify, session
 import json
@@ -15,7 +15,7 @@ import base64
 import sys
 from config import Config
 from prompts import get_system_prompt, TRANSLATION_PROMPT_TEMPLATE, VOCABULARY_ENRICHMENT_PROMPT_TEMPLATE
-from services import MistralService, GroqService, EdgeTTSService
+from services import MistralService, GroqService, AzureSpeechService
 
 # Initialisation
 app = Flask(__name__)
@@ -25,7 +25,7 @@ Config.validate()
 # Services
 mistral = MistralService()
 groq = GroqService()
-edge_tts = EdgeTTSService()
+azure_speech = AzureSpeechService()
 
 
 # ==================== UTILITAIRES ====================
@@ -187,10 +187,14 @@ def transcribe():
 
 @app.route('/speak', methods=['POST'])
 def speak():
-    """Synthèse vocale avec Edge TTS (gratuit illimité)"""
+    """Synthèse vocale avec Azure Speech"""
     print("[SPEAK] Début de la requête", file=sys.stderr)
     
     try:
+        if not Config.AZURE_SPEECH_KEY or not Config.AZURE_SPEECH_REGION:
+            print("[SPEAK] Erreur: Azure Speech non configuré", file=sys.stderr)
+            return jsonify({'error': 'Azure Speech non configuré', 'success': False}), 500
+        
         text = request.json.get('text', '').strip()
         if not text:
             print("[SPEAK] Erreur: texte vide", file=sys.stderr)
@@ -199,8 +203,8 @@ def speak():
         print(f"[SPEAK] Texte reçu: {text[:100]}...", file=sys.stderr)
         
         # Générer l'audio
-        print("[SPEAK] Appel à edge_tts.text_to_speech...", file=sys.stderr)
-        audio_base64 = edge_tts.text_to_speech(text)
+        print("[SPEAK] Appel à azure_speech.text_to_speech...", file=sys.stderr)
+        audio_base64 = azure_speech.text_to_speech(text)
         
         print(f"[SPEAK] Audio généré avec succès: {len(audio_base64)} caractères base64", file=sys.stderr)
         
@@ -222,6 +226,6 @@ if __name__ == '__main__':
     print("=" * 60)
     print("🇬🇷 Σωκράτης 2.0")
     print("=" * 60)
-    print("🔊 Voix: Edge TTS (Nestoras Neural - gratuit illimité)")
-    print("🎤 Reconnaissance: Groq Whisper avec contexte")
+    print("🔊 Voix: Azure Speech (el-GR-NestorasNeural)")
+    print("🎤 Reconnaissance: Groq Whisper avec post-correction")
     app.run(debug=True, host='0.0.0.0', port=5000)

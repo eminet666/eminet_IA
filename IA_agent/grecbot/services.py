@@ -1,6 +1,6 @@
 """
 Services pour l'application Σωκράτης 2.0
-Regroupe les services Mistral, Groq, Email et Edge TTS
+Regroupe les services Mistral, Groq, Email et Azure Speech
 """
 from mistralai import Mistral
 import requests
@@ -14,8 +14,6 @@ from email import encoders
 from datetime import datetime
 from config import Config
 import base64
-import asyncio
-import edge_tts
 import sys
 import re
 
@@ -171,37 +169,22 @@ class GroqService:
                 os.unlink(temp_path)
 
 
-# ==================== EDGE TTS SERVICE (GRATUIT) ====================
+# ==================== AZURE SPEECH SERVICE ====================
 
-class EdgeTTSService:
-    """Service pour la synthèse vocale avec Edge TTS (Microsoft, gratuit illimité)"""
+class AzureSpeechService:
+    """Service pour la synthèse vocale avec Azure Speech (Microsoft)"""
     
     def __init__(self):
-        # Voix grecque masculine disponibles :
-        # el-GR-NestorasNeural (homme, neutre, recommandé pour Socrate)
-        self.voice = "el-GR-NestorasNeural"
-        self.rate = "-15%"  # Légèrement plus lent (Socrate réfléchi)
-        self.pitch = "-5Hz"  # Voix plus grave
-    
-    async def _generate_audio(self, text):
-        """Générer l'audio de manière asynchrone"""
-        try:
-            communicate = edge_tts.Communicate(
-                text=text,
-                voice=self.voice,
-                rate=self.rate,
-                pitch=self.pitch
-            )
-            
-            audio_data = b""
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    audio_data += chunk["data"]
-            
-            return audio_data
-        except Exception as e:
-            print(f"Erreur lors de la génération audio: {e}", file=sys.stderr)
-            raise
+        self.api_key = Config.AZURE_SPEECH_KEY
+        self.region = Config.AZURE_SPEECH_REGION
+        
+        # URL de l'API (adapté selon la région)
+        self.api_url = f"https://{self.region}.tts.speech.microsoft.com/cognitiveservices/v1"
+        
+        # Configuration de la voix
+        self.voice_name = "el-GR-NestorasNeural"  # Voix masculine grecque
+        self.speaking_rate = "-15%"  # Plus lent (Socrate réfléchi)
+        self.pitch = "-5Hz"  # Plus grave
     
     def text_to_speech(self, text):
         """
@@ -216,36 +199,52 @@ class EdgeTTSService:
         Raises:
             Exception: Si la synthèse échoue
         """
+        if not self.api_key or not self.region:
+            raise ValueError("AZURE_SPEECH_KEY ou AZURE_SPEECH_REGION non configuré")
+        
+        # Nettoyer le texte des emojis
+        clean_text = text.replace('🔊', '').replace('🇫🇷', '').replace('🎤', '').replace('➤', '').strip()
+        
+        print(f"[AzureTTS] Génération audio pour: {clean_text[:50]}...", file=sys.stderr)
+        
+        # Construire le SSML (Speech Synthesis Markup Language)
+        ssml = f"""<speak version='1.0' xml:lang='el-GR'>
+            <voice name='{self.voice_name}'>
+                <prosody rate='{self.speaking_rate}' pitch='{self.pitch}'>
+                    {clean_text}
+                </prosody>
+            </voice>
+        </speak>"""
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": self.api_key,
+            "Content-Type": "application/ssml+xml",
+            "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+            "User-Agent": "SocratesBot"
+        }
+        
         try:
-            # Nettoyer le texte des emojis
-            clean_text = text.replace('🔊', '').replace('🇫🇷', '').replace('🎤', '').replace('➤', '').strip()
+            response = requests.post(
+                self.api_url,
+                headers=headers,
+                data=ssml.encode('utf-8'),
+                timeout=30
+            )
             
-            print(f"[EdgeTTS] Génération audio pour: {clean_text[:50]}...", file=sys.stderr)
+            response.raise_for_status()
             
-            # Créer ou récupérer la boucle d'événements
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_closed():
-                    raise RuntimeError("Loop is closed")
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+            # Encoder l'audio en base64
+            audio_base64 = base64.b64encode(response.content).decode('utf-8')
             
-            # Exécuter la fonction async
-            audio_bytes = loop.run_until_complete(self._generate_audio(clean_text))
-            
-            print(f"[EdgeTTS] Audio généré: {len(audio_bytes)} bytes", file=sys.stderr)
-            
-            # Encoder en base64
-            audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+            print(f"[AzureTTS] Audio généré avec succès: {len(audio_base64)} caractères base64", file=sys.stderr)
             
             return audio_base64
             
-        except Exception as e:
-            print(f"[EdgeTTS] ERREUR: {type(e).__name__}: {str(e)}", file=sys.stderr)
-            import traceback
-            traceback.print_exc()
-            raise Exception(f"Erreur Edge TTS: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            print(f"[AzureTTS] ERREUR: {str(e)}", file=sys.stderr)
+            if hasattr(e.response, 'text'):
+                print(f"[AzureTTS] Détails: {e.response.text}", file=sys.stderr)
+            raise Exception(f"Erreur Azure Speech: {str(e)}")
 
 
 # ==================== EMAIL SERVICE ====================

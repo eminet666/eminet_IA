@@ -23,6 +23,10 @@ class Config:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_WHISPER_MODEL = "whisper-large-v3"
     
+    # Azure Speech (pour synthèse vocale)
+    AZURE_SPEECH_KEY = os.getenv("AZURE_SPEECH_KEY")
+    AZURE_SPEECH_REGION = os.getenv("AZURE_SPEECH_REGION")  # Ex: "westeurope", "eastus"
+    
     # Email (Gmail)
     EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS", "eminet666@gmail.com")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
@@ -45,3 +49,6 @@ class Config:
         
         if not cls.GROQ_API_KEY:
             print("⚠️  AVERTISSEMENT: GROQ_API_KEY non configuré - la transcription vocale iOS ne fonctionnera pas")
+        
+        if not cls.AZURE_SPEECH_KEY or not cls.AZURE_SPEECH_REGION:
+            print("⚠️  AVERTISSEMENT: Azure Speech non configuré - la synthèse vocale ne fonctionnera pas")
