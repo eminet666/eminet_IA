@@ -21,9 +21,9 @@ def send_email(gmail_user, gmail_password, content, audio_file=None, pdf_file=No
     
     # Créer le subject avec le titre si disponible
     if title:
-        msg["Subject"] = f"italAgent : {title} - Dialogue italien quotidien"
+        msg["Subject"] = f"ritalAgent : {title} - Dialogue italien quotidien"
     else:
-        msg["Subject"] = "italAgent : Dialogue italien quotidien 🎧"
+        msg["Subject"] = "ritalAgent : Dialogue italien quotidien 🎧"
     
     # Titre pour l'en-tête de l'email
     email_title = f"{title}" if title else "Dialogue en italien (niveau B2)"
