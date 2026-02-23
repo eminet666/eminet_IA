@@ -13,11 +13,8 @@ VOICES = {
     "Anna": "el-GR-AthinaNeural"          # Voix féminine grecque
 }
 
-# Vitesse de la voix (valeur edge-tts : "-20%" = 20% plus lente, "0%" = normale)
-AUDIO_RATE = "-20%"
-
 # Durée de la pause entre les répliques (en millisecondes)
-PAUSE_DURATION = 900
+PAUSE_DURATION = 800
 
 # Liste des sujets pour les dialogues
 DIALOGUE_TOPICS = [
@@ -69,34 +66,14 @@ DIALOGUE_TOPICS = [
     "La philosophie stoïcienne",
     "Les écoles philosophiques grecques",
     "La statuaire grecque antique",
-    # Sujets liés à la relation amoureuse de Stephanos et Anna
-    "Anna parle de ses peintures des Cyclades à Stephanos",
-    "Anna crée des bagues avec des miniatures peintes et en parle à Stephanos",
-    "Stephanos admire le travail artistique d'Anna",
-    "Anna et Stephanos planifient un voyage romantique dans les Cyclades",
-    "Les enfants d'Anna et la vie de famille recomposée",
-    "Anna et Stephanos discutent de leur relation amoureuse naissante",
-    "Une soirée romantique entre Stephanos et Anna",
-    "Stephanos fait des compliments à Anna sur sa beauté et son talent",
-    "Anna et Stephanos se confient leurs désirs et leurs rêves",
-    "Une discussion intime et sensuelle entre Stephanos et Anna",
-    "Anna parle de sa vie après son divorce",
-    "Stephanos et Anna imaginent leur avenir ensemble",
-    "Une promenade romantique à Athènes entre Stephanos et Anna",
-    "Anna expose ses bagues et tableaux, Stephanos est admiratif",
-    "Stephanos et Anna parlent de séduction et d'amour",
+    "Un rapprochement amoureux",
+    "Une discussion de séduction",
+    "Une conversation sur les relations amoureuses"
 ]
 
 # Prompt pour la génération du dialogue
 DIALOGUE_PROMPT = """
-Crée un dialogue en grec moderne (niveau C1) entre Στέφανος et Άννα, sur le sujet suivant : {sujet}
-
-CONTEXTE DES PERSONNAGES (très important, à intégrer naturellement dans le dialogue) :
-- Στέφανος et Άννα sont amoureux l'un de l'autre
-- Άννα a divorcé récemment et garde ses enfants une semaine sur deux
-- Άννα est artiste : elle peint des tableaux représentant la Grèce, notamment les Cyclades
-- Άννα crée aussi des bagues originales ornées de miniatures peintes sur des motifs grecs
-- Leur relation est tendre, complice, parfois sensuelle — ils peuvent se séduire, se faire des compliments, parler d'amour et de désir de façon naturelle et élégante
+Crée un dialogue en grec moderne (niveau C1) entre Stephanos et Anna, sur le sujet suivant : {sujet}
 
 Le dialogue doit faire environ une page A4 (environ 500 mots).
 
@@ -116,17 +93,12 @@ Le tableau doit avoir 3 colonnes :
 - Colonne 2 : Traduction en français
 - Colonne 3 : Phrase d'exemple en grec
 
-RÈGLES STRICTES POUR LE CHOIX DES MOTS DU VOCABULAIRE :
-1. Sélectionne UNIQUEMENT les mots difficiles, rares ou peu fréquents du dialogue — pas les mots courants que tout le monde connaît
-2. Privilégie les verbes, en donnant TOUJOURS les deux voix :
-   - Voix active : présent / aoriste actif
-   - Voix passive (si elle existe) : présent passif / aoriste passif
-   - Exemple : <strong>αγαπώ / αγάπησα | αγαπιέμαι / αγαπήθηκα</strong>
-   - Pour les verbes sans passif courant, indiquer seulement la voix active
-3. Pour les SUBSTANTIFS rares : toujours inclure l'article défini (ο, η, το)
-4. Pour les ADJECTIFS et ADVERBES rares : forme de base
-5. AUCUNE REDONDANCE : chaque mot ne doit apparaître qu'une seule fois dans le tableau
-6. Environ 20-25 mots, tous issus du dialogue, tous réellement utiles à mémoriser
+RÈGLES IMPORTANTES POUR LE VOCABULAIRE :
+- Pour les SUBSTANTIFS : toujours inclure l'article défini (ο, η, το)
+  Exemple : <strong>ο καιρός</strong> (pas juste "καιρός")
+- Pour les VERBES : donner la forme au présent ET à l'aoriste selon ce format : "présent / aoriste"
+  Exemple : <strong>πηγαίνω / πήγα</strong>, <strong>τρώω / έφαγα</strong>, <strong>λέω / είπα</strong>
+- Pour les autres mots (adjectifs, adverbes, etc.) : format normal
 
 Utilise ce format de tableau :
 <table class="vocab-table">
@@ -139,9 +111,9 @@ Utilise ce format de tableau :
     </thead>
     <tbody>
         <tr>
-            <td><strong>mot grec (avec article pour noms, actif/passif pour verbes)</strong></td>
+            <td><strong>mot grec avec article OU verbe présent/aoriste</strong></td>
             <td>traduction</td>
-            <td>phrase d'exemple tirée ou inspirée du dialogue</td>
+            <td>phrase d'exemple</td>
         </tr>
     </tbody>
 </table>
