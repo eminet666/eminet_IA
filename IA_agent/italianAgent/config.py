@@ -3,8 +3,7 @@
 
 # Liste des destinataires des emails
 EMAIL_RECIPIENTS = [
-    "eminet666@gmail.com",
-    "anne.lafond@ensaama.net"
+    "eminet666@gmail.com"
 ]
 
 # Configuration des voix edge-tts pour l'italien
