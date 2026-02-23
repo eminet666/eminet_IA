@@ -1,0 +1,2001 @@
+{
+  "Conv1/kernel": {
+    "filename": "Conv1_kernel.npy",
+    "shape": [
+      3,
+      3,
+      3,
+      16
+    ],
+    "dtype": "float32"
+  },
+  "bn_Conv1/gamma": {
+    "filename": "bn_Conv1_gamma.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "bn_Conv1/beta": {
+    "filename": "bn_Conv1_beta.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_depthwise/depthwise_kernel": {
+    "filename": "expanded_conv_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      16,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_depthwise_BN/gamma": {
+    "filename": "expanded_conv_depthwise_BN_gamma.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_depthwise_BN/beta": {
+    "filename": "expanded_conv_depthwise_BN_beta.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_project/kernel": {
+    "filename": "expanded_conv_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      16,
+      8
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_project_BN/gamma": {
+    "filename": "expanded_conv_project_BN_gamma.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_project_BN/beta": {
+    "filename": "expanded_conv_project_BN_beta.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_1_expand/kernel": {
+    "filename": "block_1_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_expand_BN/gamma": {
+    "filename": "block_1_expand_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_expand_BN/beta": {
+    "filename": "block_1_expand_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_depthwise/depthwise_kernel": {
+    "filename": "block_1_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_1_depthwise_BN/gamma": {
+    "filename": "block_1_depthwise_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_depthwise_BN/beta": {
+    "filename": "block_1_depthwise_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_project/kernel": {
+    "filename": "block_1_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      48,
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_1_project_BN/gamma": {
+    "filename": "block_1_project_BN_gamma.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_1_project_BN/beta": {
+    "filename": "block_1_project_BN_beta.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_2_expand/kernel": {
+    "filename": "block_2_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_expand_BN/gamma": {
+    "filename": "block_2_expand_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_expand_BN/beta": {
+    "filename": "block_2_expand_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_depthwise/depthwise_kernel": {
+    "filename": "block_2_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_2_depthwise_BN/gamma": {
+    "filename": "block_2_depthwise_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_depthwise_BN/beta": {
+    "filename": "block_2_depthwise_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_project/kernel": {
+    "filename": "block_2_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      48,
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_2_project_BN/gamma": {
+    "filename": "block_2_project_BN_gamma.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_2_project_BN/beta": {
+    "filename": "block_2_project_BN_beta.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_3_expand/kernel": {
+    "filename": "block_3_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_expand_BN/gamma": {
+    "filename": "block_3_expand_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_expand_BN/beta": {
+    "filename": "block_3_expand_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_depthwise/depthwise_kernel": {
+    "filename": "block_3_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_3_depthwise_BN/gamma": {
+    "filename": "block_3_depthwise_BN_gamma.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_depthwise_BN/beta": {
+    "filename": "block_3_depthwise_BN_beta.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_project/kernel": {
+    "filename": "block_3_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      48,
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_3_project_BN/gamma": {
+    "filename": "block_3_project_BN_gamma.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_3_project_BN/beta": {
+    "filename": "block_3_project_BN_beta.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_4_expand/kernel": {
+    "filename": "block_4_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_expand_BN/gamma": {
+    "filename": "block_4_expand_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_expand_BN/beta": {
+    "filename": "block_4_expand_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_depthwise/depthwise_kernel": {
+    "filename": "block_4_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_4_depthwise_BN/gamma": {
+    "filename": "block_4_depthwise_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_depthwise_BN/beta": {
+    "filename": "block_4_depthwise_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_project/kernel": {
+    "filename": "block_4_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      96,
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_4_project_BN/gamma": {
+    "filename": "block_4_project_BN_gamma.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_4_project_BN/beta": {
+    "filename": "block_4_project_BN_beta.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_5_expand/kernel": {
+    "filename": "block_5_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_expand_BN/gamma": {
+    "filename": "block_5_expand_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_expand_BN/beta": {
+    "filename": "block_5_expand_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_depthwise/depthwise_kernel": {
+    "filename": "block_5_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_5_depthwise_BN/gamma": {
+    "filename": "block_5_depthwise_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_depthwise_BN/beta": {
+    "filename": "block_5_depthwise_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_project/kernel": {
+    "filename": "block_5_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      96,
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_5_project_BN/gamma": {
+    "filename": "block_5_project_BN_gamma.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_5_project_BN/beta": {
+    "filename": "block_5_project_BN_beta.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_6_expand/kernel": {
+    "filename": "block_6_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_expand_BN/gamma": {
+    "filename": "block_6_expand_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_expand_BN/beta": {
+    "filename": "block_6_expand_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_depthwise/depthwise_kernel": {
+    "filename": "block_6_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_6_depthwise_BN/gamma": {
+    "filename": "block_6_depthwise_BN_gamma.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_depthwise_BN/beta": {
+    "filename": "block_6_depthwise_BN_beta.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_project/kernel": {
+    "filename": "block_6_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      96,
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_6_project_BN/gamma": {
+    "filename": "block_6_project_BN_gamma.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_6_project_BN/beta": {
+    "filename": "block_6_project_BN_beta.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_7_expand/kernel": {
+    "filename": "block_7_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_expand_BN/gamma": {
+    "filename": "block_7_expand_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_expand_BN/beta": {
+    "filename": "block_7_expand_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_depthwise/depthwise_kernel": {
+    "filename": "block_7_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_7_depthwise_BN/gamma": {
+    "filename": "block_7_depthwise_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_depthwise_BN/beta": {
+    "filename": "block_7_depthwise_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_project/kernel": {
+    "filename": "block_7_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_7_project_BN/gamma": {
+    "filename": "block_7_project_BN_gamma.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_7_project_BN/beta": {
+    "filename": "block_7_project_BN_beta.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_8_expand/kernel": {
+    "filename": "block_8_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_expand_BN/gamma": {
+    "filename": "block_8_expand_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_expand_BN/beta": {
+    "filename": "block_8_expand_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_depthwise/depthwise_kernel": {
+    "filename": "block_8_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_8_depthwise_BN/gamma": {
+    "filename": "block_8_depthwise_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_depthwise_BN/beta": {
+    "filename": "block_8_depthwise_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_project/kernel": {
+    "filename": "block_8_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_8_project_BN/gamma": {
+    "filename": "block_8_project_BN_gamma.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_8_project_BN/beta": {
+    "filename": "block_8_project_BN_beta.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_9_expand/kernel": {
+    "filename": "block_9_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_expand_BN/gamma": {
+    "filename": "block_9_expand_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_expand_BN/beta": {
+    "filename": "block_9_expand_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_depthwise/depthwise_kernel": {
+    "filename": "block_9_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_9_depthwise_BN/gamma": {
+    "filename": "block_9_depthwise_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_depthwise_BN/beta": {
+    "filename": "block_9_depthwise_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_project/kernel": {
+    "filename": "block_9_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_9_project_BN/gamma": {
+    "filename": "block_9_project_BN_gamma.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_9_project_BN/beta": {
+    "filename": "block_9_project_BN_beta.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_10_expand/kernel": {
+    "filename": "block_10_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_expand_BN/gamma": {
+    "filename": "block_10_expand_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_expand_BN/beta": {
+    "filename": "block_10_expand_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_depthwise/depthwise_kernel": {
+    "filename": "block_10_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_10_depthwise_BN/gamma": {
+    "filename": "block_10_depthwise_BN_gamma.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_depthwise_BN/beta": {
+    "filename": "block_10_depthwise_BN_beta.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_project/kernel": {
+    "filename": "block_10_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      144,
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_10_project_BN/gamma": {
+    "filename": "block_10_project_BN_gamma.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_10_project_BN/beta": {
+    "filename": "block_10_project_BN_beta.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_11_expand/kernel": {
+    "filename": "block_11_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_expand_BN/gamma": {
+    "filename": "block_11_expand_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_expand_BN/beta": {
+    "filename": "block_11_expand_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_depthwise/depthwise_kernel": {
+    "filename": "block_11_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_11_depthwise_BN/gamma": {
+    "filename": "block_11_depthwise_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_depthwise_BN/beta": {
+    "filename": "block_11_depthwise_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_project/kernel": {
+    "filename": "block_11_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      192,
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_11_project_BN/gamma": {
+    "filename": "block_11_project_BN_gamma.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_11_project_BN/beta": {
+    "filename": "block_11_project_BN_beta.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_12_expand/kernel": {
+    "filename": "block_12_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_expand_BN/gamma": {
+    "filename": "block_12_expand_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_expand_BN/beta": {
+    "filename": "block_12_expand_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_depthwise/depthwise_kernel": {
+    "filename": "block_12_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_12_depthwise_BN/gamma": {
+    "filename": "block_12_depthwise_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_depthwise_BN/beta": {
+    "filename": "block_12_depthwise_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_project/kernel": {
+    "filename": "block_12_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      192,
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_12_project_BN/gamma": {
+    "filename": "block_12_project_BN_gamma.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_12_project_BN/beta": {
+    "filename": "block_12_project_BN_beta.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_13_expand/kernel": {
+    "filename": "block_13_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_expand_BN/gamma": {
+    "filename": "block_13_expand_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_expand_BN/beta": {
+    "filename": "block_13_expand_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_depthwise/depthwise_kernel": {
+    "filename": "block_13_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_13_depthwise_BN/gamma": {
+    "filename": "block_13_depthwise_BN_gamma.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_depthwise_BN/beta": {
+    "filename": "block_13_depthwise_BN_beta.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_project/kernel": {
+    "filename": "block_13_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      192,
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_13_project_BN/gamma": {
+    "filename": "block_13_project_BN_gamma.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_13_project_BN/beta": {
+    "filename": "block_13_project_BN_beta.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_14_expand/kernel": {
+    "filename": "block_14_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_expand_BN/gamma": {
+    "filename": "block_14_expand_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_expand_BN/beta": {
+    "filename": "block_14_expand_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_depthwise/depthwise_kernel": {
+    "filename": "block_14_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_14_depthwise_BN/gamma": {
+    "filename": "block_14_depthwise_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_depthwise_BN/beta": {
+    "filename": "block_14_depthwise_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_project/kernel": {
+    "filename": "block_14_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      336,
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_14_project_BN/gamma": {
+    "filename": "block_14_project_BN_gamma.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_14_project_BN/beta": {
+    "filename": "block_14_project_BN_beta.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_15_expand/kernel": {
+    "filename": "block_15_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_expand_BN/gamma": {
+    "filename": "block_15_expand_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_expand_BN/beta": {
+    "filename": "block_15_expand_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_depthwise/depthwise_kernel": {
+    "filename": "block_15_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_15_depthwise_BN/gamma": {
+    "filename": "block_15_depthwise_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_depthwise_BN/beta": {
+    "filename": "block_15_depthwise_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_project/kernel": {
+    "filename": "block_15_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      336,
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_15_project_BN/gamma": {
+    "filename": "block_15_project_BN_gamma.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_15_project_BN/beta": {
+    "filename": "block_15_project_BN_beta.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_16_expand/kernel": {
+    "filename": "block_16_expand_kernel.npy",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_expand_BN/gamma": {
+    "filename": "block_16_expand_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_expand_BN/beta": {
+    "filename": "block_16_expand_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_depthwise/depthwise_kernel": {
+    "filename": "block_16_depthwise_depthwise_kernel.npy",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "dtype": "float32"
+  },
+  "block_16_depthwise_BN/gamma": {
+    "filename": "block_16_depthwise_BN_gamma.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_depthwise_BN/beta": {
+    "filename": "block_16_depthwise_BN_beta.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_project/kernel": {
+    "filename": "block_16_project_kernel.npy",
+    "shape": [
+      1,
+      1,
+      336,
+      112
+    ],
+    "dtype": "float32"
+  },
+  "block_16_project_BN/gamma": {
+    "filename": "block_16_project_BN_gamma.npy",
+    "shape": [
+      112
+    ],
+    "dtype": "float32"
+  },
+  "block_16_project_BN/beta": {
+    "filename": "block_16_project_BN_beta.npy",
+    "shape": [
+      112
+    ],
+    "dtype": "float32"
+  },
+  "Conv_1/kernel": {
+    "filename": "Conv_1_kernel.npy",
+    "shape": [
+      1,
+      1,
+      112,
+      1280
+    ],
+    "dtype": "float32"
+  },
+  "Conv_1_bn/gamma": {
+    "filename": "Conv_1_bn_gamma.npy",
+    "shape": [
+      1280
+    ],
+    "dtype": "float32"
+  },
+  "Conv_1_bn/beta": {
+    "filename": "Conv_1_bn_beta.npy",
+    "shape": [
+      1280
+    ],
+    "dtype": "float32"
+  },
+  "dense_Dense1/kernel": {
+    "filename": "dense_Dense1_kernel.npy",
+    "shape": [
+      1280,
+      100
+    ],
+    "dtype": "float32"
+  },
+  "dense_Dense1/bias": {
+    "filename": "dense_Dense1_bias.npy",
+    "shape": [
+      100
+    ],
+    "dtype": "float32"
+  },
+  "dense_Dense2/kernel": {
+    "filename": "dense_Dense2_kernel.npy",
+    "shape": [
+      100,
+      2
+    ],
+    "dtype": "float32"
+  },
+  "bn_Conv1/moving_mean": {
+    "filename": "bn_Conv1_moving_mean.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "bn_Conv1/moving_variance": {
+    "filename": "bn_Conv1_moving_variance.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_depthwise_BN/moving_mean": {
+    "filename": "expanded_conv_depthwise_BN_moving_mean.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_depthwise_BN/moving_variance": {
+    "filename": "expanded_conv_depthwise_BN_moving_variance.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_project_BN/moving_mean": {
+    "filename": "expanded_conv_project_BN_moving_mean.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "expanded_conv_project_BN/moving_variance": {
+    "filename": "expanded_conv_project_BN_moving_variance.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_1_expand_BN/moving_mean": {
+    "filename": "block_1_expand_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_expand_BN/moving_variance": {
+    "filename": "block_1_expand_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_depthwise_BN/moving_mean": {
+    "filename": "block_1_depthwise_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_depthwise_BN/moving_variance": {
+    "filename": "block_1_depthwise_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_1_project_BN/moving_mean": {
+    "filename": "block_1_project_BN_moving_mean.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_1_project_BN/moving_variance": {
+    "filename": "block_1_project_BN_moving_variance.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_2_expand_BN/moving_mean": {
+    "filename": "block_2_expand_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_expand_BN/moving_variance": {
+    "filename": "block_2_expand_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_depthwise_BN/moving_mean": {
+    "filename": "block_2_depthwise_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_depthwise_BN/moving_variance": {
+    "filename": "block_2_depthwise_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_2_project_BN/moving_mean": {
+    "filename": "block_2_project_BN_moving_mean.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_2_project_BN/moving_variance": {
+    "filename": "block_2_project_BN_moving_variance.npy",
+    "shape": [
+      8
+    ],
+    "dtype": "float32"
+  },
+  "block_3_expand_BN/moving_mean": {
+    "filename": "block_3_expand_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_expand_BN/moving_variance": {
+    "filename": "block_3_expand_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_depthwise_BN/moving_mean": {
+    "filename": "block_3_depthwise_BN_moving_mean.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_depthwise_BN/moving_variance": {
+    "filename": "block_3_depthwise_BN_moving_variance.npy",
+    "shape": [
+      48
+    ],
+    "dtype": "float32"
+  },
+  "block_3_project_BN/moving_mean": {
+    "filename": "block_3_project_BN_moving_mean.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_3_project_BN/moving_variance": {
+    "filename": "block_3_project_BN_moving_variance.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_4_expand_BN/moving_mean": {
+    "filename": "block_4_expand_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_expand_BN/moving_variance": {
+    "filename": "block_4_expand_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_depthwise_BN/moving_mean": {
+    "filename": "block_4_depthwise_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_depthwise_BN/moving_variance": {
+    "filename": "block_4_depthwise_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_4_project_BN/moving_mean": {
+    "filename": "block_4_project_BN_moving_mean.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_4_project_BN/moving_variance": {
+    "filename": "block_4_project_BN_moving_variance.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_5_expand_BN/moving_mean": {
+    "filename": "block_5_expand_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_expand_BN/moving_variance": {
+    "filename": "block_5_expand_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_depthwise_BN/moving_mean": {
+    "filename": "block_5_depthwise_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_depthwise_BN/moving_variance": {
+    "filename": "block_5_depthwise_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_5_project_BN/moving_mean": {
+    "filename": "block_5_project_BN_moving_mean.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_5_project_BN/moving_variance": {
+    "filename": "block_5_project_BN_moving_variance.npy",
+    "shape": [
+      16
+    ],
+    "dtype": "float32"
+  },
+  "block_6_expand_BN/moving_mean": {
+    "filename": "block_6_expand_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_expand_BN/moving_variance": {
+    "filename": "block_6_expand_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_depthwise_BN/moving_mean": {
+    "filename": "block_6_depthwise_BN_moving_mean.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_depthwise_BN/moving_variance": {
+    "filename": "block_6_depthwise_BN_moving_variance.npy",
+    "shape": [
+      96
+    ],
+    "dtype": "float32"
+  },
+  "block_6_project_BN/moving_mean": {
+    "filename": "block_6_project_BN_moving_mean.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_6_project_BN/moving_variance": {
+    "filename": "block_6_project_BN_moving_variance.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_7_expand_BN/moving_mean": {
+    "filename": "block_7_expand_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_expand_BN/moving_variance": {
+    "filename": "block_7_expand_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_depthwise_BN/moving_mean": {
+    "filename": "block_7_depthwise_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_depthwise_BN/moving_variance": {
+    "filename": "block_7_depthwise_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_7_project_BN/moving_mean": {
+    "filename": "block_7_project_BN_moving_mean.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_7_project_BN/moving_variance": {
+    "filename": "block_7_project_BN_moving_variance.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_8_expand_BN/moving_mean": {
+    "filename": "block_8_expand_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_expand_BN/moving_variance": {
+    "filename": "block_8_expand_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_depthwise_BN/moving_mean": {
+    "filename": "block_8_depthwise_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_depthwise_BN/moving_variance": {
+    "filename": "block_8_depthwise_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_8_project_BN/moving_mean": {
+    "filename": "block_8_project_BN_moving_mean.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_8_project_BN/moving_variance": {
+    "filename": "block_8_project_BN_moving_variance.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_9_expand_BN/moving_mean": {
+    "filename": "block_9_expand_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_expand_BN/moving_variance": {
+    "filename": "block_9_expand_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_depthwise_BN/moving_mean": {
+    "filename": "block_9_depthwise_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_depthwise_BN/moving_variance": {
+    "filename": "block_9_depthwise_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_9_project_BN/moving_mean": {
+    "filename": "block_9_project_BN_moving_mean.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_9_project_BN/moving_variance": {
+    "filename": "block_9_project_BN_moving_variance.npy",
+    "shape": [
+      24
+    ],
+    "dtype": "float32"
+  },
+  "block_10_expand_BN/moving_mean": {
+    "filename": "block_10_expand_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_expand_BN/moving_variance": {
+    "filename": "block_10_expand_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_depthwise_BN/moving_mean": {
+    "filename": "block_10_depthwise_BN_moving_mean.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_depthwise_BN/moving_variance": {
+    "filename": "block_10_depthwise_BN_moving_variance.npy",
+    "shape": [
+      144
+    ],
+    "dtype": "float32"
+  },
+  "block_10_project_BN/moving_mean": {
+    "filename": "block_10_project_BN_moving_mean.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_10_project_BN/moving_variance": {
+    "filename": "block_10_project_BN_moving_variance.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_11_expand_BN/moving_mean": {
+    "filename": "block_11_expand_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_expand_BN/moving_variance": {
+    "filename": "block_11_expand_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_depthwise_BN/moving_mean": {
+    "filename": "block_11_depthwise_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_depthwise_BN/moving_variance": {
+    "filename": "block_11_depthwise_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_11_project_BN/moving_mean": {
+    "filename": "block_11_project_BN_moving_mean.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_11_project_BN/moving_variance": {
+    "filename": "block_11_project_BN_moving_variance.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_12_expand_BN/moving_mean": {
+    "filename": "block_12_expand_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_expand_BN/moving_variance": {
+    "filename": "block_12_expand_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_depthwise_BN/moving_mean": {
+    "filename": "block_12_depthwise_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_depthwise_BN/moving_variance": {
+    "filename": "block_12_depthwise_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_12_project_BN/moving_mean": {
+    "filename": "block_12_project_BN_moving_mean.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_12_project_BN/moving_variance": {
+    "filename": "block_12_project_BN_moving_variance.npy",
+    "shape": [
+      32
+    ],
+    "dtype": "float32"
+  },
+  "block_13_expand_BN/moving_mean": {
+    "filename": "block_13_expand_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_expand_BN/moving_variance": {
+    "filename": "block_13_expand_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_depthwise_BN/moving_mean": {
+    "filename": "block_13_depthwise_BN_moving_mean.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_depthwise_BN/moving_variance": {
+    "filename": "block_13_depthwise_BN_moving_variance.npy",
+    "shape": [
+      192
+    ],
+    "dtype": "float32"
+  },
+  "block_13_project_BN/moving_mean": {
+    "filename": "block_13_project_BN_moving_mean.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_13_project_BN/moving_variance": {
+    "filename": "block_13_project_BN_moving_variance.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_14_expand_BN/moving_mean": {
+    "filename": "block_14_expand_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_expand_BN/moving_variance": {
+    "filename": "block_14_expand_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_depthwise_BN/moving_mean": {
+    "filename": "block_14_depthwise_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_depthwise_BN/moving_variance": {
+    "filename": "block_14_depthwise_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_14_project_BN/moving_mean": {
+    "filename": "block_14_project_BN_moving_mean.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_14_project_BN/moving_variance": {
+    "filename": "block_14_project_BN_moving_variance.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_15_expand_BN/moving_mean": {
+    "filename": "block_15_expand_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_expand_BN/moving_variance": {
+    "filename": "block_15_expand_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_depthwise_BN/moving_mean": {
+    "filename": "block_15_depthwise_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_depthwise_BN/moving_variance": {
+    "filename": "block_15_depthwise_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_15_project_BN/moving_mean": {
+    "filename": "block_15_project_BN_moving_mean.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_15_project_BN/moving_variance": {
+    "filename": "block_15_project_BN_moving_variance.npy",
+    "shape": [
+      56
+    ],
+    "dtype": "float32"
+  },
+  "block_16_expand_BN/moving_mean": {
+    "filename": "block_16_expand_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_expand_BN/moving_variance": {
+    "filename": "block_16_expand_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_depthwise_BN/moving_mean": {
+    "filename": "block_16_depthwise_BN_moving_mean.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_depthwise_BN/moving_variance": {
+    "filename": "block_16_depthwise_BN_moving_variance.npy",
+    "shape": [
+      336
+    ],
+    "dtype": "float32"
+  },
+  "block_16_project_BN/moving_mean": {
+    "filename": "block_16_project_BN_moving_mean.npy",
+    "shape": [
+      112
+    ],
+    "dtype": "float32"
+  },
+  "block_16_project_BN/moving_variance": {
+    "filename": "block_16_project_BN_moving_variance.npy",
+    "shape": [
+      112
+    ],
+    "dtype": "float32"
+  },
+  "Conv_1_bn/moving_mean": {
+    "filename": "Conv_1_bn_moving_mean.npy",
+    "shape": [
+      1280
+    ],
+    "dtype": "float32"
+  },
+  "Conv_1_bn/moving_variance": {
+    "filename": "Conv_1_bn_moving_variance.npy",
+    "shape": [
+      1280
+    ],
+    "dtype": "float32"
+  }
+}

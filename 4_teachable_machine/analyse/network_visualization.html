@@ -1,0 +1,4741 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation Réseau - tm-my-image-model</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@300;500;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --bg-tertiary: #252b4a;
+            --accent-1: #00d4ff;
+            --accent-2: #7c3aed;
+            --accent-3: #ec4899;
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --border: #2d3558;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1629 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            opacity: 0.03;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" /></filter><rect width="100%" height="100%" filter="url(%23noise)" /></svg>');
+            z-index: 1000;
+        }
+        
+        header {
+            padding: 2rem 3rem;
+            background: rgba(26, 31, 58, 0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 50%, var(--accent-3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 3rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-1);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.1);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-1);
+        }
+        
+        .controls {
+            padding: 0 3rem 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background: var(--accent-1);
+            color: var(--bg-primary);
+            border-color: var(--accent-1);
+            transform: translateY(-2px);
+        }
+        
+        .btn.active {
+            background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent-3) 100%);
+            border-color: var(--accent-2);
+        }
+        
+        .visualization {
+            padding: 0 3rem 3rem;
+        }
+        
+        #network-viz {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .layer-node {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .layer-node:hover {
+            filter: brightness(1.3);
+        }
+        
+        .layer-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            fill: var(--text-primary);
+            pointer-events: none;
+        }
+        
+        .connection {
+            stroke: var(--accent-1);
+            stroke-opacity: 0.2;
+            fill: none;
+            transition: all 0.3s;
+        }
+        
+        .connection.highlighted {
+            stroke-opacity: 0.8;
+            stroke-width: 2;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(26, 31, 58, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent-1);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        .layer-detail {
+            padding: 2rem 3rem;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin: 2rem 3rem;
+            border: 1px solid var(--border);
+        }
+        
+        .layer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .layer-item {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-2);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    
+    <header>
+        <h1>Visualisation du Réseau de Neurones</h1>
+        <div class="subtitle">tm-my-image-model • MobileNetV2 • 2 classes</div>
+    </header>
+    
+    <div class="stats">
+        <div class="stat-card fade-in" style="animation-delay: 0.1s">
+            <div class="stat-label">Total Couches</div>
+            <div class="stat-value">161</div>
+        </div>
+        <div class="stat-card fade-in" style="animation-delay: 0.2s">
+            <div class="stat-label">Paramètres</div>
+            <div class="stat-value">538,508</div>
+        </div>
+        <div class="stat-card fade-in" style="animation-delay: 0.3s">
+            <div class="stat-label">Taille Entrée</div>
+            <div class="stat-value">224×224</div>
+        </div>
+        <div class="stat-card fade-in" style="animation-delay: 0.4s">
+            <div class="stat-label">Classes</div>
+            <div class="stat-value">Cats • Dogs</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button class="btn active" onclick="showView('flow')">Vue Flux</button>
+        <button class="btn" onclick="showView('layers')">Par Type de Couche</button>
+        <button class="btn" onclick="showView('weights')">Poids & Paramètres</button>
+    </div>
+    
+    <div class="visualization">
+        <svg id="network-viz" width="100%" height="800"></svg>
+    </div>
+    
+    <div id="layer-details"></div>
+    
+    <div class="tooltip"></div>
+    
+    <script>
+        // Vérifier que D3 est chargé
+        if (typeof d3 === 'undefined') {
+            document.body.innerHTML = '<div style="padding: 2rem; text-align: center; color: #ef4444;"><h1>Erreur de chargement</h1><p>La bibliothèque D3.js n\'a pas pu être chargée. Vérifiez votre connexion Internet.</p></div>';
+            throw new Error('D3.js not loaded');
+        }
+        
+        // Données du réseau
+        const layers = [
+  {
+    "name": "sequential_1",
+    "type": "Sequential",
+    "depth": 0,
+    "parent": null
+  },
+  {
+    "name": "model1",
+    "type": "Model",
+    "depth": 1,
+    "parent": "sequential_1"
+  },
+  {
+    "name": "input_1",
+    "type": "InputLayer",
+    "depth": 2,
+    "parent": "model1",
+    "input_shape": [
+      null,
+      224,
+      224,
+      3
+    ]
+  },
+  {
+    "name": "Conv1_pad",
+    "type": "ZeroPadding2D",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "input_1"
+    ]
+  },
+  {
+    "name": "Conv1",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 16,
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      2,
+      2
+    ],
+    "inputs": [
+      "Conv1_pad"
+    ]
+  },
+  {
+    "name": "bn_Conv1",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "Conv1"
+    ]
+  },
+  {
+    "name": "Conv1_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "bn_Conv1"
+    ]
+  },
+  {
+    "name": "expanded_conv_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "Conv1_relu"
+    ]
+  },
+  {
+    "name": "expanded_conv_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "expanded_conv_depthwise"
+    ]
+  },
+  {
+    "name": "expanded_conv_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "expanded_conv_depthwise_BN"
+    ]
+  },
+  {
+    "name": "expanded_conv_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 8,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "expanded_conv_depthwise_relu"
+    ]
+  },
+  {
+    "name": "expanded_conv_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "expanded_conv_project"
+    ]
+  },
+  {
+    "name": "block_1_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 48,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "expanded_conv_project_BN"
+    ]
+  },
+  {
+    "name": "block_1_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_1_expand"
+    ]
+  },
+  {
+    "name": "block_1_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_1_expand_BN"
+    ]
+  },
+  {
+    "name": "block_1_pad",
+    "type": "ZeroPadding2D",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_1_expand_relu"
+    ]
+  },
+  {
+    "name": "block_1_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      2,
+      2
+    ],
+    "inputs": [
+      "block_1_pad"
+    ]
+  },
+  {
+    "name": "block_1_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_1_depthwise"
+    ]
+  },
+  {
+    "name": "block_1_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_1_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_1_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 8,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_1_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_1_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_1_project"
+    ]
+  },
+  {
+    "name": "block_2_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 48,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_1_project_BN"
+    ]
+  },
+  {
+    "name": "block_2_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_2_expand"
+    ]
+  },
+  {
+    "name": "block_2_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_2_expand_BN"
+    ]
+  },
+  {
+    "name": "block_2_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_2_expand_relu"
+    ]
+  },
+  {
+    "name": "block_2_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_2_depthwise"
+    ]
+  },
+  {
+    "name": "block_2_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_2_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_2_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 8,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_2_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_2_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_2_project"
+    ]
+  },
+  {
+    "name": "block_2_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_1_project_BN",
+      "block_2_project_BN"
+    ]
+  },
+  {
+    "name": "block_3_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 48,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_2_add"
+    ]
+  },
+  {
+    "name": "block_3_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_3_expand"
+    ]
+  },
+  {
+    "name": "block_3_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_3_expand_BN"
+    ]
+  },
+  {
+    "name": "block_3_pad",
+    "type": "ZeroPadding2D",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_3_expand_relu"
+    ]
+  },
+  {
+    "name": "block_3_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      2,
+      2
+    ],
+    "inputs": [
+      "block_3_pad"
+    ]
+  },
+  {
+    "name": "block_3_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_3_depthwise"
+    ]
+  },
+  {
+    "name": "block_3_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_3_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_3_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 16,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_3_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_3_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_3_project"
+    ]
+  },
+  {
+    "name": "block_4_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 96,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_3_project_BN"
+    ]
+  },
+  {
+    "name": "block_4_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_4_expand"
+    ]
+  },
+  {
+    "name": "block_4_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_4_expand_BN"
+    ]
+  },
+  {
+    "name": "block_4_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_4_expand_relu"
+    ]
+  },
+  {
+    "name": "block_4_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_4_depthwise"
+    ]
+  },
+  {
+    "name": "block_4_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_4_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_4_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 16,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_4_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_4_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_4_project"
+    ]
+  },
+  {
+    "name": "block_4_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_3_project_BN",
+      "block_4_project_BN"
+    ]
+  },
+  {
+    "name": "block_5_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 96,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_4_add"
+    ]
+  },
+  {
+    "name": "block_5_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_5_expand"
+    ]
+  },
+  {
+    "name": "block_5_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_5_expand_BN"
+    ]
+  },
+  {
+    "name": "block_5_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_5_expand_relu"
+    ]
+  },
+  {
+    "name": "block_5_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_5_depthwise"
+    ]
+  },
+  {
+    "name": "block_5_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_5_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_5_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 16,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_5_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_5_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_5_project"
+    ]
+  },
+  {
+    "name": "block_5_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_4_add",
+      "block_5_project_BN"
+    ]
+  },
+  {
+    "name": "block_6_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 96,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_5_add"
+    ]
+  },
+  {
+    "name": "block_6_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_6_expand"
+    ]
+  },
+  {
+    "name": "block_6_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_6_expand_BN"
+    ]
+  },
+  {
+    "name": "block_6_pad",
+    "type": "ZeroPadding2D",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_6_expand_relu"
+    ]
+  },
+  {
+    "name": "block_6_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      2,
+      2
+    ],
+    "inputs": [
+      "block_6_pad"
+    ]
+  },
+  {
+    "name": "block_6_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_6_depthwise"
+    ]
+  },
+  {
+    "name": "block_6_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_6_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_6_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 24,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_6_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_6_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_6_project"
+    ]
+  },
+  {
+    "name": "block_7_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 144,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_6_project_BN"
+    ]
+  },
+  {
+    "name": "block_7_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_7_expand"
+    ]
+  },
+  {
+    "name": "block_7_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_7_expand_BN"
+    ]
+  },
+  {
+    "name": "block_7_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_7_expand_relu"
+    ]
+  },
+  {
+    "name": "block_7_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_7_depthwise"
+    ]
+  },
+  {
+    "name": "block_7_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_7_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_7_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 24,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_7_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_7_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_7_project"
+    ]
+  },
+  {
+    "name": "block_7_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_6_project_BN",
+      "block_7_project_BN"
+    ]
+  },
+  {
+    "name": "block_8_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 144,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_7_add"
+    ]
+  },
+  {
+    "name": "block_8_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_8_expand"
+    ]
+  },
+  {
+    "name": "block_8_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_8_expand_BN"
+    ]
+  },
+  {
+    "name": "block_8_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_8_expand_relu"
+    ]
+  },
+  {
+    "name": "block_8_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_8_depthwise"
+    ]
+  },
+  {
+    "name": "block_8_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_8_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_8_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 24,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_8_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_8_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_8_project"
+    ]
+  },
+  {
+    "name": "block_8_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_7_add",
+      "block_8_project_BN"
+    ]
+  },
+  {
+    "name": "block_9_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 144,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_8_add"
+    ]
+  },
+  {
+    "name": "block_9_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_9_expand"
+    ]
+  },
+  {
+    "name": "block_9_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_9_expand_BN"
+    ]
+  },
+  {
+    "name": "block_9_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_9_expand_relu"
+    ]
+  },
+  {
+    "name": "block_9_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_9_depthwise"
+    ]
+  },
+  {
+    "name": "block_9_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_9_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_9_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 24,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_9_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_9_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_9_project"
+    ]
+  },
+  {
+    "name": "block_9_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_8_add",
+      "block_9_project_BN"
+    ]
+  },
+  {
+    "name": "block_10_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 144,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_9_add"
+    ]
+  },
+  {
+    "name": "block_10_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_10_expand"
+    ]
+  },
+  {
+    "name": "block_10_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_10_expand_BN"
+    ]
+  },
+  {
+    "name": "block_10_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_10_expand_relu"
+    ]
+  },
+  {
+    "name": "block_10_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_10_depthwise"
+    ]
+  },
+  {
+    "name": "block_10_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_10_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_10_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 32,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_10_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_10_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_10_project"
+    ]
+  },
+  {
+    "name": "block_11_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 192,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_10_project_BN"
+    ]
+  },
+  {
+    "name": "block_11_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_11_expand"
+    ]
+  },
+  {
+    "name": "block_11_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_11_expand_BN"
+    ]
+  },
+  {
+    "name": "block_11_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_11_expand_relu"
+    ]
+  },
+  {
+    "name": "block_11_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_11_depthwise"
+    ]
+  },
+  {
+    "name": "block_11_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_11_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_11_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 32,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_11_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_11_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_11_project"
+    ]
+  },
+  {
+    "name": "block_11_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_10_project_BN",
+      "block_11_project_BN"
+    ]
+  },
+  {
+    "name": "block_12_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 192,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_11_add"
+    ]
+  },
+  {
+    "name": "block_12_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_12_expand"
+    ]
+  },
+  {
+    "name": "block_12_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_12_expand_BN"
+    ]
+  },
+  {
+    "name": "block_12_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_12_expand_relu"
+    ]
+  },
+  {
+    "name": "block_12_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_12_depthwise"
+    ]
+  },
+  {
+    "name": "block_12_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_12_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_12_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 32,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_12_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_12_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_12_project"
+    ]
+  },
+  {
+    "name": "block_12_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_11_add",
+      "block_12_project_BN"
+    ]
+  },
+  {
+    "name": "block_13_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 192,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_12_add"
+    ]
+  },
+  {
+    "name": "block_13_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_13_expand"
+    ]
+  },
+  {
+    "name": "block_13_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_13_expand_BN"
+    ]
+  },
+  {
+    "name": "block_13_pad",
+    "type": "ZeroPadding2D",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_13_expand_relu"
+    ]
+  },
+  {
+    "name": "block_13_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      2,
+      2
+    ],
+    "inputs": [
+      "block_13_pad"
+    ]
+  },
+  {
+    "name": "block_13_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_13_depthwise"
+    ]
+  },
+  {
+    "name": "block_13_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_13_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_13_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 56,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_13_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_13_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_13_project"
+    ]
+  },
+  {
+    "name": "block_14_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 336,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_13_project_BN"
+    ]
+  },
+  {
+    "name": "block_14_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_14_expand"
+    ]
+  },
+  {
+    "name": "block_14_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_14_expand_BN"
+    ]
+  },
+  {
+    "name": "block_14_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_14_expand_relu"
+    ]
+  },
+  {
+    "name": "block_14_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_14_depthwise"
+    ]
+  },
+  {
+    "name": "block_14_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_14_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_14_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 56,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_14_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_14_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_14_project"
+    ]
+  },
+  {
+    "name": "block_14_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_13_project_BN",
+      "block_14_project_BN"
+    ]
+  },
+  {
+    "name": "block_15_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 336,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_14_add"
+    ]
+  },
+  {
+    "name": "block_15_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_15_expand"
+    ]
+  },
+  {
+    "name": "block_15_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_15_expand_BN"
+    ]
+  },
+  {
+    "name": "block_15_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_15_expand_relu"
+    ]
+  },
+  {
+    "name": "block_15_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_15_depthwise"
+    ]
+  },
+  {
+    "name": "block_15_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_15_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_15_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 56,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_15_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_15_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_15_project"
+    ]
+  },
+  {
+    "name": "block_15_add",
+    "type": "Add",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_14_add",
+      "block_15_project_BN"
+    ]
+  },
+  {
+    "name": "block_16_expand",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 336,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_15_add"
+    ]
+  },
+  {
+    "name": "block_16_expand_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_16_expand"
+    ]
+  },
+  {
+    "name": "block_16_expand_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_16_expand_BN"
+    ]
+  },
+  {
+    "name": "block_16_depthwise",
+    "type": "DepthwiseConv2D",
+    "depth": 2,
+    "parent": "model1",
+    "kernel_size": [
+      3,
+      3
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_16_expand_relu"
+    ]
+  },
+  {
+    "name": "block_16_depthwise_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_16_depthwise"
+    ]
+  },
+  {
+    "name": "block_16_depthwise_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "block_16_depthwise_BN"
+    ]
+  },
+  {
+    "name": "block_16_project",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 112,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_16_depthwise_relu"
+    ]
+  },
+  {
+    "name": "block_16_project_BN",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "block_16_project"
+    ]
+  },
+  {
+    "name": "Conv_1",
+    "type": "Conv2D",
+    "depth": 2,
+    "parent": "model1",
+    "filters": 1280,
+    "kernel_size": [
+      1,
+      1
+    ],
+    "strides": [
+      1,
+      1
+    ],
+    "inputs": [
+      "block_16_project_BN"
+    ]
+  },
+  {
+    "name": "Conv_1_bn",
+    "type": "BatchNormalization",
+    "depth": 2,
+    "parent": "model1",
+    "axis": -1,
+    "inputs": [
+      "Conv_1"
+    ]
+  },
+  {
+    "name": "out_relu",
+    "type": "ReLU",
+    "depth": 2,
+    "parent": "model1",
+    "inputs": [
+      "Conv_1_bn"
+    ]
+  },
+  {
+    "name": "global_average_pooling2d_GlobalAveragePooling2D1",
+    "type": "GlobalAveragePooling2D",
+    "depth": 1,
+    "parent": "sequential_1"
+  },
+  {
+    "name": "sequential_3",
+    "type": "Sequential",
+    "depth": 0,
+    "parent": null
+  },
+  {
+    "name": "dense_Dense1",
+    "type": "Dense",
+    "depth": 1,
+    "parent": "sequential_3",
+    "units": 100,
+    "activation": "relu"
+  },
+  {
+    "name": "dense_Dense2",
+    "type": "Dense",
+    "depth": 1,
+    "parent": "sequential_3",
+    "units": 2,
+    "activation": "softmax"
+  }
+];
+        const weights = [
+  {
+    "name": "Conv1/kernel",
+    "shape": [
+      3,
+      3,
+      3,
+      16
+    ],
+    "params": 432,
+    "layer": "Conv1"
+  },
+  {
+    "name": "bn_Conv1/gamma",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "bn_Conv1"
+  },
+  {
+    "name": "bn_Conv1/beta",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "bn_Conv1"
+  },
+  {
+    "name": "expanded_conv_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      16,
+      1
+    ],
+    "params": 144,
+    "layer": "expanded_conv_depthwise"
+  },
+  {
+    "name": "expanded_conv_depthwise_BN/gamma",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "expanded_conv_depthwise_BN"
+  },
+  {
+    "name": "expanded_conv_depthwise_BN/beta",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "expanded_conv_depthwise_BN"
+  },
+  {
+    "name": "expanded_conv_project/kernel",
+    "shape": [
+      1,
+      1,
+      16,
+      8
+    ],
+    "params": 128,
+    "layer": "expanded_conv_project"
+  },
+  {
+    "name": "expanded_conv_project_BN/gamma",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "expanded_conv_project_BN"
+  },
+  {
+    "name": "expanded_conv_project_BN/beta",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "expanded_conv_project_BN"
+  },
+  {
+    "name": "block_1_expand/kernel",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "params": 384,
+    "layer": "block_1_expand"
+  },
+  {
+    "name": "block_1_expand_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_expand_BN"
+  },
+  {
+    "name": "block_1_expand_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_expand_BN"
+  },
+  {
+    "name": "block_1_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "params": 432,
+    "layer": "block_1_depthwise"
+  },
+  {
+    "name": "block_1_depthwise_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_depthwise_BN"
+  },
+  {
+    "name": "block_1_depthwise_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_depthwise_BN"
+  },
+  {
+    "name": "block_1_project/kernel",
+    "shape": [
+      1,
+      1,
+      48,
+      8
+    ],
+    "params": 384,
+    "layer": "block_1_project"
+  },
+  {
+    "name": "block_1_project_BN/gamma",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_1_project_BN"
+  },
+  {
+    "name": "block_1_project_BN/beta",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_1_project_BN"
+  },
+  {
+    "name": "block_2_expand/kernel",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "params": 384,
+    "layer": "block_2_expand"
+  },
+  {
+    "name": "block_2_expand_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_expand_BN"
+  },
+  {
+    "name": "block_2_expand_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_expand_BN"
+  },
+  {
+    "name": "block_2_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "params": 432,
+    "layer": "block_2_depthwise"
+  },
+  {
+    "name": "block_2_depthwise_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_depthwise_BN"
+  },
+  {
+    "name": "block_2_depthwise_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_depthwise_BN"
+  },
+  {
+    "name": "block_2_project/kernel",
+    "shape": [
+      1,
+      1,
+      48,
+      8
+    ],
+    "params": 384,
+    "layer": "block_2_project"
+  },
+  {
+    "name": "block_2_project_BN/gamma",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_2_project_BN"
+  },
+  {
+    "name": "block_2_project_BN/beta",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_2_project_BN"
+  },
+  {
+    "name": "block_3_expand/kernel",
+    "shape": [
+      1,
+      1,
+      8,
+      48
+    ],
+    "params": 384,
+    "layer": "block_3_expand"
+  },
+  {
+    "name": "block_3_expand_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_expand_BN"
+  },
+  {
+    "name": "block_3_expand_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_expand_BN"
+  },
+  {
+    "name": "block_3_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      48,
+      1
+    ],
+    "params": 432,
+    "layer": "block_3_depthwise"
+  },
+  {
+    "name": "block_3_depthwise_BN/gamma",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_depthwise_BN"
+  },
+  {
+    "name": "block_3_depthwise_BN/beta",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_depthwise_BN"
+  },
+  {
+    "name": "block_3_project/kernel",
+    "shape": [
+      1,
+      1,
+      48,
+      16
+    ],
+    "params": 768,
+    "layer": "block_3_project"
+  },
+  {
+    "name": "block_3_project_BN/gamma",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_3_project_BN"
+  },
+  {
+    "name": "block_3_project_BN/beta",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_3_project_BN"
+  },
+  {
+    "name": "block_4_expand/kernel",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "params": 1536,
+    "layer": "block_4_expand"
+  },
+  {
+    "name": "block_4_expand_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_expand_BN"
+  },
+  {
+    "name": "block_4_expand_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_expand_BN"
+  },
+  {
+    "name": "block_4_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "params": 864,
+    "layer": "block_4_depthwise"
+  },
+  {
+    "name": "block_4_depthwise_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_depthwise_BN"
+  },
+  {
+    "name": "block_4_depthwise_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_depthwise_BN"
+  },
+  {
+    "name": "block_4_project/kernel",
+    "shape": [
+      1,
+      1,
+      96,
+      16
+    ],
+    "params": 1536,
+    "layer": "block_4_project"
+  },
+  {
+    "name": "block_4_project_BN/gamma",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_4_project_BN"
+  },
+  {
+    "name": "block_4_project_BN/beta",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_4_project_BN"
+  },
+  {
+    "name": "block_5_expand/kernel",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "params": 1536,
+    "layer": "block_5_expand"
+  },
+  {
+    "name": "block_5_expand_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_expand_BN"
+  },
+  {
+    "name": "block_5_expand_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_expand_BN"
+  },
+  {
+    "name": "block_5_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "params": 864,
+    "layer": "block_5_depthwise"
+  },
+  {
+    "name": "block_5_depthwise_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_depthwise_BN"
+  },
+  {
+    "name": "block_5_depthwise_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_depthwise_BN"
+  },
+  {
+    "name": "block_5_project/kernel",
+    "shape": [
+      1,
+      1,
+      96,
+      16
+    ],
+    "params": 1536,
+    "layer": "block_5_project"
+  },
+  {
+    "name": "block_5_project_BN/gamma",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_5_project_BN"
+  },
+  {
+    "name": "block_5_project_BN/beta",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_5_project_BN"
+  },
+  {
+    "name": "block_6_expand/kernel",
+    "shape": [
+      1,
+      1,
+      16,
+      96
+    ],
+    "params": 1536,
+    "layer": "block_6_expand"
+  },
+  {
+    "name": "block_6_expand_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_expand_BN"
+  },
+  {
+    "name": "block_6_expand_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_expand_BN"
+  },
+  {
+    "name": "block_6_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      96,
+      1
+    ],
+    "params": 864,
+    "layer": "block_6_depthwise"
+  },
+  {
+    "name": "block_6_depthwise_BN/gamma",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_depthwise_BN"
+  },
+  {
+    "name": "block_6_depthwise_BN/beta",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_depthwise_BN"
+  },
+  {
+    "name": "block_6_project/kernel",
+    "shape": [
+      1,
+      1,
+      96,
+      24
+    ],
+    "params": 2304,
+    "layer": "block_6_project"
+  },
+  {
+    "name": "block_6_project_BN/gamma",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_6_project_BN"
+  },
+  {
+    "name": "block_6_project_BN/beta",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_6_project_BN"
+  },
+  {
+    "name": "block_7_expand/kernel",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "params": 3456,
+    "layer": "block_7_expand"
+  },
+  {
+    "name": "block_7_expand_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_expand_BN"
+  },
+  {
+    "name": "block_7_expand_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_expand_BN"
+  },
+  {
+    "name": "block_7_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "params": 1296,
+    "layer": "block_7_depthwise"
+  },
+  {
+    "name": "block_7_depthwise_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_depthwise_BN"
+  },
+  {
+    "name": "block_7_depthwise_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_depthwise_BN"
+  },
+  {
+    "name": "block_7_project/kernel",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "params": 3456,
+    "layer": "block_7_project"
+  },
+  {
+    "name": "block_7_project_BN/gamma",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_7_project_BN"
+  },
+  {
+    "name": "block_7_project_BN/beta",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_7_project_BN"
+  },
+  {
+    "name": "block_8_expand/kernel",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "params": 3456,
+    "layer": "block_8_expand"
+  },
+  {
+    "name": "block_8_expand_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_expand_BN"
+  },
+  {
+    "name": "block_8_expand_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_expand_BN"
+  },
+  {
+    "name": "block_8_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "params": 1296,
+    "layer": "block_8_depthwise"
+  },
+  {
+    "name": "block_8_depthwise_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_depthwise_BN"
+  },
+  {
+    "name": "block_8_depthwise_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_depthwise_BN"
+  },
+  {
+    "name": "block_8_project/kernel",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "params": 3456,
+    "layer": "block_8_project"
+  },
+  {
+    "name": "block_8_project_BN/gamma",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_8_project_BN"
+  },
+  {
+    "name": "block_8_project_BN/beta",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_8_project_BN"
+  },
+  {
+    "name": "block_9_expand/kernel",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "params": 3456,
+    "layer": "block_9_expand"
+  },
+  {
+    "name": "block_9_expand_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_expand_BN"
+  },
+  {
+    "name": "block_9_expand_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_expand_BN"
+  },
+  {
+    "name": "block_9_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "params": 1296,
+    "layer": "block_9_depthwise"
+  },
+  {
+    "name": "block_9_depthwise_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_depthwise_BN"
+  },
+  {
+    "name": "block_9_depthwise_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_depthwise_BN"
+  },
+  {
+    "name": "block_9_project/kernel",
+    "shape": [
+      1,
+      1,
+      144,
+      24
+    ],
+    "params": 3456,
+    "layer": "block_9_project"
+  },
+  {
+    "name": "block_9_project_BN/gamma",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_9_project_BN"
+  },
+  {
+    "name": "block_9_project_BN/beta",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_9_project_BN"
+  },
+  {
+    "name": "block_10_expand/kernel",
+    "shape": [
+      1,
+      1,
+      24,
+      144
+    ],
+    "params": 3456,
+    "layer": "block_10_expand"
+  },
+  {
+    "name": "block_10_expand_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_expand_BN"
+  },
+  {
+    "name": "block_10_expand_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_expand_BN"
+  },
+  {
+    "name": "block_10_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      144,
+      1
+    ],
+    "params": 1296,
+    "layer": "block_10_depthwise"
+  },
+  {
+    "name": "block_10_depthwise_BN/gamma",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_depthwise_BN"
+  },
+  {
+    "name": "block_10_depthwise_BN/beta",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_depthwise_BN"
+  },
+  {
+    "name": "block_10_project/kernel",
+    "shape": [
+      1,
+      1,
+      144,
+      32
+    ],
+    "params": 4608,
+    "layer": "block_10_project"
+  },
+  {
+    "name": "block_10_project_BN/gamma",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_10_project_BN"
+  },
+  {
+    "name": "block_10_project_BN/beta",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_10_project_BN"
+  },
+  {
+    "name": "block_11_expand/kernel",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "params": 6144,
+    "layer": "block_11_expand"
+  },
+  {
+    "name": "block_11_expand_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_expand_BN"
+  },
+  {
+    "name": "block_11_expand_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_expand_BN"
+  },
+  {
+    "name": "block_11_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "params": 1728,
+    "layer": "block_11_depthwise"
+  },
+  {
+    "name": "block_11_depthwise_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_depthwise_BN"
+  },
+  {
+    "name": "block_11_depthwise_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_depthwise_BN"
+  },
+  {
+    "name": "block_11_project/kernel",
+    "shape": [
+      1,
+      1,
+      192,
+      32
+    ],
+    "params": 6144,
+    "layer": "block_11_project"
+  },
+  {
+    "name": "block_11_project_BN/gamma",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_11_project_BN"
+  },
+  {
+    "name": "block_11_project_BN/beta",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_11_project_BN"
+  },
+  {
+    "name": "block_12_expand/kernel",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "params": 6144,
+    "layer": "block_12_expand"
+  },
+  {
+    "name": "block_12_expand_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_expand_BN"
+  },
+  {
+    "name": "block_12_expand_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_expand_BN"
+  },
+  {
+    "name": "block_12_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "params": 1728,
+    "layer": "block_12_depthwise"
+  },
+  {
+    "name": "block_12_depthwise_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_depthwise_BN"
+  },
+  {
+    "name": "block_12_depthwise_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_depthwise_BN"
+  },
+  {
+    "name": "block_12_project/kernel",
+    "shape": [
+      1,
+      1,
+      192,
+      32
+    ],
+    "params": 6144,
+    "layer": "block_12_project"
+  },
+  {
+    "name": "block_12_project_BN/gamma",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_12_project_BN"
+  },
+  {
+    "name": "block_12_project_BN/beta",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_12_project_BN"
+  },
+  {
+    "name": "block_13_expand/kernel",
+    "shape": [
+      1,
+      1,
+      32,
+      192
+    ],
+    "params": 6144,
+    "layer": "block_13_expand"
+  },
+  {
+    "name": "block_13_expand_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_expand_BN"
+  },
+  {
+    "name": "block_13_expand_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_expand_BN"
+  },
+  {
+    "name": "block_13_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      192,
+      1
+    ],
+    "params": 1728,
+    "layer": "block_13_depthwise"
+  },
+  {
+    "name": "block_13_depthwise_BN/gamma",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_depthwise_BN"
+  },
+  {
+    "name": "block_13_depthwise_BN/beta",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_depthwise_BN"
+  },
+  {
+    "name": "block_13_project/kernel",
+    "shape": [
+      1,
+      1,
+      192,
+      56
+    ],
+    "params": 10752,
+    "layer": "block_13_project"
+  },
+  {
+    "name": "block_13_project_BN/gamma",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_13_project_BN"
+  },
+  {
+    "name": "block_13_project_BN/beta",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_13_project_BN"
+  },
+  {
+    "name": "block_14_expand/kernel",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "params": 18816,
+    "layer": "block_14_expand"
+  },
+  {
+    "name": "block_14_expand_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_expand_BN"
+  },
+  {
+    "name": "block_14_expand_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_expand_BN"
+  },
+  {
+    "name": "block_14_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "params": 3024,
+    "layer": "block_14_depthwise"
+  },
+  {
+    "name": "block_14_depthwise_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_depthwise_BN"
+  },
+  {
+    "name": "block_14_depthwise_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_depthwise_BN"
+  },
+  {
+    "name": "block_14_project/kernel",
+    "shape": [
+      1,
+      1,
+      336,
+      56
+    ],
+    "params": 18816,
+    "layer": "block_14_project"
+  },
+  {
+    "name": "block_14_project_BN/gamma",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_14_project_BN"
+  },
+  {
+    "name": "block_14_project_BN/beta",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_14_project_BN"
+  },
+  {
+    "name": "block_15_expand/kernel",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "params": 18816,
+    "layer": "block_15_expand"
+  },
+  {
+    "name": "block_15_expand_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_expand_BN"
+  },
+  {
+    "name": "block_15_expand_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_expand_BN"
+  },
+  {
+    "name": "block_15_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "params": 3024,
+    "layer": "block_15_depthwise"
+  },
+  {
+    "name": "block_15_depthwise_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_depthwise_BN"
+  },
+  {
+    "name": "block_15_depthwise_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_depthwise_BN"
+  },
+  {
+    "name": "block_15_project/kernel",
+    "shape": [
+      1,
+      1,
+      336,
+      56
+    ],
+    "params": 18816,
+    "layer": "block_15_project"
+  },
+  {
+    "name": "block_15_project_BN/gamma",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_15_project_BN"
+  },
+  {
+    "name": "block_15_project_BN/beta",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_15_project_BN"
+  },
+  {
+    "name": "block_16_expand/kernel",
+    "shape": [
+      1,
+      1,
+      56,
+      336
+    ],
+    "params": 18816,
+    "layer": "block_16_expand"
+  },
+  {
+    "name": "block_16_expand_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_expand_BN"
+  },
+  {
+    "name": "block_16_expand_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_expand_BN"
+  },
+  {
+    "name": "block_16_depthwise/depthwise_kernel",
+    "shape": [
+      3,
+      3,
+      336,
+      1
+    ],
+    "params": 3024,
+    "layer": "block_16_depthwise"
+  },
+  {
+    "name": "block_16_depthwise_BN/gamma",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_depthwise_BN"
+  },
+  {
+    "name": "block_16_depthwise_BN/beta",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_depthwise_BN"
+  },
+  {
+    "name": "block_16_project/kernel",
+    "shape": [
+      1,
+      1,
+      336,
+      112
+    ],
+    "params": 37632,
+    "layer": "block_16_project"
+  },
+  {
+    "name": "block_16_project_BN/gamma",
+    "shape": [
+      112
+    ],
+    "params": 112,
+    "layer": "block_16_project_BN"
+  },
+  {
+    "name": "block_16_project_BN/beta",
+    "shape": [
+      112
+    ],
+    "params": 112,
+    "layer": "block_16_project_BN"
+  },
+  {
+    "name": "Conv_1/kernel",
+    "shape": [
+      1,
+      1,
+      112,
+      1280
+    ],
+    "params": 143360,
+    "layer": "Conv_1"
+  },
+  {
+    "name": "Conv_1_bn/gamma",
+    "shape": [
+      1280
+    ],
+    "params": 1280,
+    "layer": "Conv_1_bn"
+  },
+  {
+    "name": "Conv_1_bn/beta",
+    "shape": [
+      1280
+    ],
+    "params": 1280,
+    "layer": "Conv_1_bn"
+  },
+  {
+    "name": "dense_Dense1/kernel",
+    "shape": [
+      1280,
+      100
+    ],
+    "params": 128000,
+    "layer": "dense_Dense1"
+  },
+  {
+    "name": "dense_Dense1/bias",
+    "shape": [
+      100
+    ],
+    "params": 100,
+    "layer": "dense_Dense1"
+  },
+  {
+    "name": "dense_Dense2/kernel",
+    "shape": [
+      100,
+      2
+    ],
+    "params": 200,
+    "layer": "dense_Dense2"
+  },
+  {
+    "name": "bn_Conv1/moving_mean",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "bn_Conv1"
+  },
+  {
+    "name": "bn_Conv1/moving_variance",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "bn_Conv1"
+  },
+  {
+    "name": "expanded_conv_depthwise_BN/moving_mean",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "expanded_conv_depthwise_BN"
+  },
+  {
+    "name": "expanded_conv_depthwise_BN/moving_variance",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "expanded_conv_depthwise_BN"
+  },
+  {
+    "name": "expanded_conv_project_BN/moving_mean",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "expanded_conv_project_BN"
+  },
+  {
+    "name": "expanded_conv_project_BN/moving_variance",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "expanded_conv_project_BN"
+  },
+  {
+    "name": "block_1_expand_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_expand_BN"
+  },
+  {
+    "name": "block_1_expand_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_expand_BN"
+  },
+  {
+    "name": "block_1_depthwise_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_depthwise_BN"
+  },
+  {
+    "name": "block_1_depthwise_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_1_depthwise_BN"
+  },
+  {
+    "name": "block_1_project_BN/moving_mean",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_1_project_BN"
+  },
+  {
+    "name": "block_1_project_BN/moving_variance",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_1_project_BN"
+  },
+  {
+    "name": "block_2_expand_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_expand_BN"
+  },
+  {
+    "name": "block_2_expand_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_expand_BN"
+  },
+  {
+    "name": "block_2_depthwise_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_depthwise_BN"
+  },
+  {
+    "name": "block_2_depthwise_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_2_depthwise_BN"
+  },
+  {
+    "name": "block_2_project_BN/moving_mean",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_2_project_BN"
+  },
+  {
+    "name": "block_2_project_BN/moving_variance",
+    "shape": [
+      8
+    ],
+    "params": 8,
+    "layer": "block_2_project_BN"
+  },
+  {
+    "name": "block_3_expand_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_expand_BN"
+  },
+  {
+    "name": "block_3_expand_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_expand_BN"
+  },
+  {
+    "name": "block_3_depthwise_BN/moving_mean",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_depthwise_BN"
+  },
+  {
+    "name": "block_3_depthwise_BN/moving_variance",
+    "shape": [
+      48
+    ],
+    "params": 48,
+    "layer": "block_3_depthwise_BN"
+  },
+  {
+    "name": "block_3_project_BN/moving_mean",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_3_project_BN"
+  },
+  {
+    "name": "block_3_project_BN/moving_variance",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_3_project_BN"
+  },
+  {
+    "name": "block_4_expand_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_expand_BN"
+  },
+  {
+    "name": "block_4_expand_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_expand_BN"
+  },
+  {
+    "name": "block_4_depthwise_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_depthwise_BN"
+  },
+  {
+    "name": "block_4_depthwise_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_4_depthwise_BN"
+  },
+  {
+    "name": "block_4_project_BN/moving_mean",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_4_project_BN"
+  },
+  {
+    "name": "block_4_project_BN/moving_variance",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_4_project_BN"
+  },
+  {
+    "name": "block_5_expand_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_expand_BN"
+  },
+  {
+    "name": "block_5_expand_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_expand_BN"
+  },
+  {
+    "name": "block_5_depthwise_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_depthwise_BN"
+  },
+  {
+    "name": "block_5_depthwise_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_5_depthwise_BN"
+  },
+  {
+    "name": "block_5_project_BN/moving_mean",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_5_project_BN"
+  },
+  {
+    "name": "block_5_project_BN/moving_variance",
+    "shape": [
+      16
+    ],
+    "params": 16,
+    "layer": "block_5_project_BN"
+  },
+  {
+    "name": "block_6_expand_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_expand_BN"
+  },
+  {
+    "name": "block_6_expand_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_expand_BN"
+  },
+  {
+    "name": "block_6_depthwise_BN/moving_mean",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_depthwise_BN"
+  },
+  {
+    "name": "block_6_depthwise_BN/moving_variance",
+    "shape": [
+      96
+    ],
+    "params": 96,
+    "layer": "block_6_depthwise_BN"
+  },
+  {
+    "name": "block_6_project_BN/moving_mean",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_6_project_BN"
+  },
+  {
+    "name": "block_6_project_BN/moving_variance",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_6_project_BN"
+  },
+  {
+    "name": "block_7_expand_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_expand_BN"
+  },
+  {
+    "name": "block_7_expand_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_expand_BN"
+  },
+  {
+    "name": "block_7_depthwise_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_depthwise_BN"
+  },
+  {
+    "name": "block_7_depthwise_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_7_depthwise_BN"
+  },
+  {
+    "name": "block_7_project_BN/moving_mean",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_7_project_BN"
+  },
+  {
+    "name": "block_7_project_BN/moving_variance",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_7_project_BN"
+  },
+  {
+    "name": "block_8_expand_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_expand_BN"
+  },
+  {
+    "name": "block_8_expand_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_expand_BN"
+  },
+  {
+    "name": "block_8_depthwise_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_depthwise_BN"
+  },
+  {
+    "name": "block_8_depthwise_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_8_depthwise_BN"
+  },
+  {
+    "name": "block_8_project_BN/moving_mean",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_8_project_BN"
+  },
+  {
+    "name": "block_8_project_BN/moving_variance",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_8_project_BN"
+  },
+  {
+    "name": "block_9_expand_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_expand_BN"
+  },
+  {
+    "name": "block_9_expand_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_expand_BN"
+  },
+  {
+    "name": "block_9_depthwise_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_depthwise_BN"
+  },
+  {
+    "name": "block_9_depthwise_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_9_depthwise_BN"
+  },
+  {
+    "name": "block_9_project_BN/moving_mean",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_9_project_BN"
+  },
+  {
+    "name": "block_9_project_BN/moving_variance",
+    "shape": [
+      24
+    ],
+    "params": 24,
+    "layer": "block_9_project_BN"
+  },
+  {
+    "name": "block_10_expand_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_expand_BN"
+  },
+  {
+    "name": "block_10_expand_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_expand_BN"
+  },
+  {
+    "name": "block_10_depthwise_BN/moving_mean",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_depthwise_BN"
+  },
+  {
+    "name": "block_10_depthwise_BN/moving_variance",
+    "shape": [
+      144
+    ],
+    "params": 144,
+    "layer": "block_10_depthwise_BN"
+  },
+  {
+    "name": "block_10_project_BN/moving_mean",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_10_project_BN"
+  },
+  {
+    "name": "block_10_project_BN/moving_variance",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_10_project_BN"
+  },
+  {
+    "name": "block_11_expand_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_expand_BN"
+  },
+  {
+    "name": "block_11_expand_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_expand_BN"
+  },
+  {
+    "name": "block_11_depthwise_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_depthwise_BN"
+  },
+  {
+    "name": "block_11_depthwise_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_11_depthwise_BN"
+  },
+  {
+    "name": "block_11_project_BN/moving_mean",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_11_project_BN"
+  },
+  {
+    "name": "block_11_project_BN/moving_variance",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_11_project_BN"
+  },
+  {
+    "name": "block_12_expand_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_expand_BN"
+  },
+  {
+    "name": "block_12_expand_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_expand_BN"
+  },
+  {
+    "name": "block_12_depthwise_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_depthwise_BN"
+  },
+  {
+    "name": "block_12_depthwise_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_12_depthwise_BN"
+  },
+  {
+    "name": "block_12_project_BN/moving_mean",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_12_project_BN"
+  },
+  {
+    "name": "block_12_project_BN/moving_variance",
+    "shape": [
+      32
+    ],
+    "params": 32,
+    "layer": "block_12_project_BN"
+  },
+  {
+    "name": "block_13_expand_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_expand_BN"
+  },
+  {
+    "name": "block_13_expand_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_expand_BN"
+  },
+  {
+    "name": "block_13_depthwise_BN/moving_mean",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_depthwise_BN"
+  },
+  {
+    "name": "block_13_depthwise_BN/moving_variance",
+    "shape": [
+      192
+    ],
+    "params": 192,
+    "layer": "block_13_depthwise_BN"
+  },
+  {
+    "name": "block_13_project_BN/moving_mean",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_13_project_BN"
+  },
+  {
+    "name": "block_13_project_BN/moving_variance",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_13_project_BN"
+  },
+  {
+    "name": "block_14_expand_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_expand_BN"
+  },
+  {
+    "name": "block_14_expand_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_expand_BN"
+  },
+  {
+    "name": "block_14_depthwise_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_depthwise_BN"
+  },
+  {
+    "name": "block_14_depthwise_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_14_depthwise_BN"
+  },
+  {
+    "name": "block_14_project_BN/moving_mean",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_14_project_BN"
+  },
+  {
+    "name": "block_14_project_BN/moving_variance",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_14_project_BN"
+  },
+  {
+    "name": "block_15_expand_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_expand_BN"
+  },
+  {
+    "name": "block_15_expand_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_expand_BN"
+  },
+  {
+    "name": "block_15_depthwise_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_depthwise_BN"
+  },
+  {
+    "name": "block_15_depthwise_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_15_depthwise_BN"
+  },
+  {
+    "name": "block_15_project_BN/moving_mean",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_15_project_BN"
+  },
+  {
+    "name": "block_15_project_BN/moving_variance",
+    "shape": [
+      56
+    ],
+    "params": 56,
+    "layer": "block_15_project_BN"
+  },
+  {
+    "name": "block_16_expand_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_expand_BN"
+  },
+  {
+    "name": "block_16_expand_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_expand_BN"
+  },
+  {
+    "name": "block_16_depthwise_BN/moving_mean",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_depthwise_BN"
+  },
+  {
+    "name": "block_16_depthwise_BN/moving_variance",
+    "shape": [
+      336
+    ],
+    "params": 336,
+    "layer": "block_16_depthwise_BN"
+  },
+  {
+    "name": "block_16_project_BN/moving_mean",
+    "shape": [
+      112
+    ],
+    "params": 112,
+    "layer": "block_16_project_BN"
+  },
+  {
+    "name": "block_16_project_BN/moving_variance",
+    "shape": [
+      112
+    ],
+    "params": 112,
+    "layer": "block_16_project_BN"
+  },
+  {
+    "name": "Conv_1_bn/moving_mean",
+    "shape": [
+      1280
+    ],
+    "params": 1280,
+    "layer": "Conv_1_bn"
+  },
+  {
+    "name": "Conv_1_bn/moving_variance",
+    "shape": [
+      1280
+    ],
+    "params": 1280,
+    "layer": "Conv_1_bn"
+  }
+];
+        const metadata = {
+  "tfjsVersion": "1.7.4",
+  "tmVersion": "2.4.10",
+  "packageVersion": "0.8.4-alpha2",
+  "packageName": "@teachablemachine/image",
+  "timeStamp": "2026-02-02T17:58:13.803Z",
+  "userMetadata": {},
+  "modelName": "tm-my-image-model",
+  "labels": [
+    "Cats",
+    "Dogs"
+  ],
+  "imageSize": 224
+};
+        
+        let currentView = 'flow';
+        
+        // Couleurs par type de couche
+        const layerColors = {
+            'InputLayer': '#00d4ff',
+            'Conv2D': '#7c3aed',
+            'DepthwiseConv2D': '#ec4899',
+            'BatchNormalization': '#f59e0b',
+            'ReLU': '#10b981',
+            'Dense': '#ef4444',
+            'GlobalAveragePooling2D': '#8b5cf6',
+            'Add': '#06b6d4',
+            'ZeroPadding2D': '#64748b',
+            'Sequential': '#6366f1',
+            'Model': '#14b8a6'
+        };
+        
+        function showView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Clear current visualization
+            d3.select('#network-viz').selectAll('*').remove();
+            d3.select('#layer-details').html('');
+            
+            // Show appropriate view
+            if (view === 'flow') {
+                visualizeFlow();
+            } else if (view === 'layers') {
+                visualizeByLayerType();
+            } else if (view === 'weights') {
+                visualizeWeights();
+            }
+        }
+        
+        function visualizeFlow() {
+            const svg = d3.select('#network-viz');
+            const width = parseInt(svg.style('width'));
+            const height = 800;
+            
+            // Filter important layers for visualization
+            const importantTypes = ['InputLayer', 'Conv2D', 'DepthwiseConv2D', 'Dense', 'GlobalAveragePooling2D'];
+            const visibleLayers = layers.filter(l => importantTypes.includes(l.type));
+            
+            const layerHeight = height / (visibleLayers.length + 2);
+            
+            const g = svg.append('g');
+            
+            // Draw connections first
+            visibleLayers.forEach((layer, i) => {
+                if (i > 0) {
+                    g.append('path')
+                        .attr('class', 'connection')
+                        .attr('d', `M ${width/2},${(i)*layerHeight + 50} L ${width/2},${(i+1)*layerHeight + 50}`)
+                        .attr('stroke-width', 1.5);
+                }
+            });
+            
+            // Draw layers
+            visibleLayers.forEach((layer, i) => {
+                const y = (i+1) * layerHeight;
+                
+                // Node
+                const node = g.append('g')
+                    .attr('class', 'layer-node')
+                    .attr('transform', `translate(${width/2},${y})`);
+                
+                const radius = layer.type === 'Dense' ? 40 : 30;
+                
+                node.append('circle')
+                    .attr('r', radius)
+                    .attr('fill', layerColors[layer.type] || '#666')
+                    .attr('opacity', 0.8)
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 2);
+                
+                // Label
+                node.append('text')
+                    .attr('class', 'layer-label')
+                    .attr('y', radius + 20)
+                    .attr('text-anchor', 'middle')
+                    .text(layer.type);
+                
+                // Add hover tooltip
+                node.on('mouseover', function(event) {
+                    showTooltip(event, layer);
+                })
+                .on('mouseout', hideTooltip);
+            });
+        }
+        
+        function visualizeByLayerType() {
+            const svg = d3.select('#network-viz');
+            const width = parseInt(svg.style('width'));
+            const height = 800;
+            
+            // Group layers by type
+            const layersByType = {};
+            layers.forEach(layer => {
+                if (!layersByType[layer.type]) layersByType[layer.type] = [];
+                layersByType[layer.type].push(layer);
+            });
+            
+            const types = Object.keys(layersByType);
+            const columnWidth = width / types.length;
+            
+            const g = svg.append('g');
+            
+            types.forEach((type, typeIdx) => {
+                const typeLayers = layersByType[type];
+                const x = typeIdx * columnWidth + columnWidth/2;
+                
+                // Type header
+                g.append('text')
+                    .attr('x', x)
+                    .attr('y', 30)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', layerColors[type] || '#666')
+                    .attr('font-size', '14px')
+                    .attr('font-weight', 'bold')
+                    .attr('font-family', 'JetBrains Mono')
+                    .text(`${type} (${typeLayers.length})`);
+                
+                // Draw each layer
+                const layerSpacing = (height - 100) / (typeLayers.length + 1);
+                
+                typeLayers.forEach((layer, idx) => {
+                    const y = 80 + (idx + 1) * layerSpacing;
+                    
+                    const node = g.append('g')
+                        .attr('class', 'layer-node')
+                        .attr('transform', `translate(${x},${y})`);
+                    
+                    node.append('circle')
+                        .attr('r', 8)
+                        .attr('fill', layerColors[type] || '#666')
+                        .attr('opacity', 0.8);
+                    
+                    node.on('mouseover', function(event) {
+                        showTooltip(event, layer);
+                    })
+                    .on('mouseout', hideTooltip);
+                });
+            });
+        }
+        
+        function visualizeWeights() {
+            const svg = d3.select('#network-viz');
+            const width = parseInt(svg.style('width'));
+            const height = 800;
+            
+            // Sort weights by size
+            const sortedWeights = [...weights].sort((a, b) => b.params - a.params).slice(0, 30);
+            
+            const maxParams = Math.max(...sortedWeights.map(w => w.params));
+            const g = svg.append('g').attr('transform', 'translate(50, 50)');
+            
+            const barHeight = (height - 100) / sortedWeights.length;
+            
+            sortedWeights.forEach((weight, i) => {
+                const barWidth = (weight.params / maxParams) * (width - 300);
+                const y = i * barHeight;
+                
+                // Bar
+                g.append('rect')
+                    .attr('x', 200)
+                    .attr('y', y)
+                    .attr('width', barWidth)
+                    .attr('height', barHeight - 2)
+                    .attr('fill', `hsl(${240 + (i * 120 / sortedWeights.length)}, 80%, 60%)`)
+                    .attr('opacity', 0.8)
+                    .attr('rx', 4);
+                
+                // Label
+                g.append('text')
+                    .attr('x', 0)
+                    .attr('y', y + barHeight/2)
+                    .attr('fill', '#e0e7ff')
+                    .attr('font-size', '10px')
+                    .attr('font-family', 'JetBrains Mono')
+                    .attr('dominant-baseline', 'middle')
+                    .text(weight.name.substring(0, 25));
+                
+                // Value
+                g.append('text')
+                    .attr('x', 210 + barWidth)
+                    .attr('y', y + barHeight/2)
+                    .attr('fill', '#00d4ff')
+                    .attr('font-size', '10px')
+                    .attr('font-family', 'JetBrains Mono')
+                    .attr('dominant-baseline', 'middle')
+                    .text(weight.params.toLocaleString());
+            });
+        }
+        
+        function showTooltip(event, layer) {
+            const tooltip = d3.select('.tooltip');
+            
+            let content = `<strong>${layer.name}</strong><br>`;
+            content += `Type: ${layer.type}<br>`;
+            
+            if (layer.filters) content += `Filtres: ${layer.filters}<br>`;
+            if (layer.kernel_size) content += `Kernel: ${layer.kernel_size.join('×')}<br>`;
+            if (layer.units) content += `Units: ${layer.units}<br>`;
+            if (layer.activation) content += `Activation: ${layer.activation}<br>`;
+            
+            tooltip.html(content)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY + 10) + 'px')
+                .classed('show', true);
+        }
+        
+        function hideTooltip() {
+            d3.select('.tooltip').classed('show', false);
+        }
+        
+        // Initialize
+        visualizeFlow();
+    </script>
+</body>
+</html>
