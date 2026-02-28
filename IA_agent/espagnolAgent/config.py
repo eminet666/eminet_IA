@@ -3,7 +3,7 @@
 
 # Liste des destinataires des emails
 EMAIL_RECIPIENTS = [
-    "eminet666@gmail.com"
+    "lhonorececile@gmail.com"
 ]
 
 # Configuration des voix edge-tts pour l'espagnol

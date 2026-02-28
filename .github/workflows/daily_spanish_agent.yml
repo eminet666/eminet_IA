@@ -2,7 +2,7 @@ name: Daily Spanish Learning Agent
 
 on:
   schedule:
-    - cron: "0 7 * * *"  # 8h du matin à Paris (UTC+1) — décalé d'1h par rapport à l'italien
+    - cron: "0 5 * * *"  # 8h du matin à Paris (UTC+1) — décalé d'1h par rapport à l'italien
   workflow_dispatch:  # Pour déclencher manuellement si besoin
 
 jobs:
