@@ -3,7 +3,7 @@
 
 # Liste des destinataires des emails
 EMAIL_RECIPIENTS = [
-    "eric.sandillon@ensaama.net",
+    "ebardet02@gmail.com",
     "eminet666@gmail.com"
 ]
 
