@@ -2,7 +2,7 @@ name: Daily Italian Learning Agent
 
 on:
   schedule:
-    - cron: "0 6 * * *"  # 7h du matin à Paris (UTC+1) — décalé d'1h par rapport au grec
+    - cron: "0 4 * * *"  # 7h du matin à Paris (UTC+1) — décalé d'1h par rapport au grec
   workflow_dispatch:  # Pour déclencher manuellement si besoin
 
 jobs:
