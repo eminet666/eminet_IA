@@ -8,11 +8,13 @@ import re
 def generate_dialogue(client, lang):
     """
     Génère un dialogue via Mistral AI à partir de la config de langue.
-    Le niveau, les destinataires et la vitesse sont lus depuis lang directement.
+    Si lang.GRAMMAR_TOPICS existe (niveaux C), injecte un thème de grammaire
+    indépendant du dialogue. Sinon, le point de grammaire est tiré du dialogue.
     """
     sujet = lang.TOPICS[datetime.now().day % len(lang.TOPICS)]
 
-    prompt = lang.PROMPT_TEMPLATE.format(
+    # ── Thème de grammaire : indépendant (niveau C) ou lié au dialogue ──
+    prompt_args = dict(
         sujet         = sujet,
         level         = lang.LEVEL,
         context       = lang.CONTEXT,
@@ -20,6 +22,12 @@ def generate_dialogue(client, lang):
         vocab_header  = lang.VOCAB_HEADER,
         vocab_col1    = lang.VOCAB_COL1,
     )
+
+    if hasattr(lang, "GRAMMAR_TOPICS") and lang.GRAMMAR_TOPICS:
+        grammar_topic = lang.GRAMMAR_TOPICS[datetime.now().timetuple().tm_yday % len(lang.GRAMMAR_TOPICS)]
+        prompt_args["grammar_topic"] = grammar_topic
+
+    prompt = lang.PROMPT_TEMPLATE.format(**prompt_args)
 
     response = client.chat.complete(
         model    = "mistral-small-latest",
@@ -40,7 +48,6 @@ def extract_title(html_content):
 def extract_dialogue_lines(html_content, lang):
     """
     Extrait les répliques du dialogue pour les personnages définis dans lang.CHARACTERS.
-    Fonctionne pour n'importe quelle paire de personnages.
     """
     speakers      = list(lang.CHARACTERS.keys())
     pattern_names = "|".join(re.escape(s) for s in speakers)
