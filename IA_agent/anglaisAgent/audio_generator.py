@@ -12,7 +12,7 @@ from config import VOICES, PAUSE_DURATION, AUDIO_RATE
 async def generate_audio_from_dialogue_async(dialogue_lines, output_file="dialogue.mp3"):
     """
     Génère un fichier audio MP3 à partir des répliques du dialogue
-    avec edge-tts pour des voix anglaises naturelles, à vitesse réduite
+    avec edge-tts pour des voix espagnoles naturelles, à vitesse réduite
     """
     if not dialogue_lines:
         print("⚠️  Aucune réplique trouvée dans le dialogue")

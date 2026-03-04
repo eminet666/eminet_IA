@@ -44,7 +44,7 @@ def extract_dialogue_lines(html_content):
     dialogue_lines = []
 
     # Pattern pour extraire les répliques : <p><strong>Nom:</strong> texte</p>
-    pattern = r'<p><strong>(Jim|Allie):</strong>\s*(.*?)</p>'
+    pattern = r'<p><strong>(Pablo|Esperanza):</strong>\s*(.*?)</p>'
     matches = re.findall(pattern, html_content, re.IGNORECASE | re.DOTALL)
 
     for speaker, text in matches:
@@ -52,7 +52,7 @@ def extract_dialogue_lines(html_content):
         clean_text = re.sub(r'<[^>]+>', '', text).strip()
 
         # Normaliser les noms
-        speaker_normalized = "Jim" if "Jim" in speaker else "Allie"
+        speaker_normalized = "Pablo" if "Pablo" in speaker else "Esperanza"
 
         dialogue_lines.append((speaker_normalized, clean_text))
 
