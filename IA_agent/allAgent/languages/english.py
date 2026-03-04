@@ -3,52 +3,45 @@
 # Configuration ANGLAISE — tous les paramètres propres à l'anglais
 # ============================================================
 
-# ── Paramètres modifiables facilement ───────────────────────
-
 EMAIL_RECIPIENTS = [
+    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
 ]
 
 LEVEL = "A2"
-
 AUDIO_RATE = "-25%"
-
 PAUSE_DURATION = 1000
 
-# ── Identité de l'agent ──────────────────────────────────────
 ACCENT_COLOR  = "#cf142b"
 AGENT_PREFIX  = "engAgent"
 OUTPUT_PREFIX = "dialogue_anglais"
 VOCAB_HEADER  = "Vocabulary"
 VOCAB_COL1    = "English"
 
-# ── Personnages et voix ──────────────────────────────────────
 CHARACTERS = {
     "Jack":  {"voice": "en-GB-RyanNeural"},
     "Emily": {"voice": "en-GB-SoniaNeural"},
 }
 
-# ── Contexte narratif ────────────────────────────────────────
 CONTEXT = """
 CHARACTER CONTEXT:
 - Jack and Emily are two British friends living in London
 - Natural, warm and encouraging tone — suitable for a beginner learner
 """
 
-# ── Focus grammatical ────────────────────────────────────────
 GRAMMAR_FOCUS = """
-VOCABULARY RULES (level A2):
-1. Useful or slightly tricky words only — not ultra-basic ones
-2. For VERBS: infinitive + past simple form
-   Example: to go -> went, to buy -> bought, to say -> said
-3. For NOUNS: include the article (a/an/the) where relevant
-4. For useful EXPRESSIONS: give them as they appear
-   Example: How much is it?, I would like..., What about you?
-5. NO REPETITION: each word or expression only once
-6. Around 20-25 entries from the dialogue
+RÈGLES STRICTES POUR LE CHOIX DES MOTS :
+1. Sélectionne uniquement les mots utiles et un peu difficiles du dialogue — pas les mots ultra-basiques
+2. Pour les VERBES : donner l'infinitif + le past simple
+   Exemple : <strong>to go → went</strong>, <strong>to buy → bought</strong>, <strong>to say → said</strong>
+3. Pour les NOMS : inclure l'article défini (a / an / the)
+   Exemple : <strong>the market</strong>, <strong>a shop</strong>
+4. Pour les expressions utiles : les donner telles quelles
+   Exemple : <strong>How much is it?</strong>, <strong>I would like...</strong>, <strong>What about you?</strong>
+5. AUCUNE REDONDANCE : chaque mot ou expression une seule fois
+6. Environ 20-25 entrées, toutes issues du dialogue
 """
 
-# ── Sujets ───────────────────────────────────────────────────
 TOPICS = [
     "Introducing yourself and your family",
     "Ordering food and drinks at a café",
@@ -82,7 +75,6 @@ TOPICS = [
     "Talking about dreams and ambitions",
 ]
 
-# ── Prompt ───────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
 Create a dialogue in English (level {level}) between Jack and Emily,
 on the following topic: {sujet}
@@ -112,4 +104,28 @@ Columns: {vocab_col1} | French translation | Example
   <thead><tr><th>{vocab_col1}</th><th>French</th><th>Example</th></tr></thead>
   <tbody><tr><td><strong>word</strong></td><td>translation</td><td>example</td></tr></tbody>
 </table>
+
+GRAMMAR POINT:
+After the vocabulary, identify ONE grammar structure present in the dialogue
+suitable for level {level} (e.g. present continuous, past simple irregular verbs,
+countable/uncountable nouns, prepositions of place...).
+Add a "Grammar" section in this format:
+
+<div class="grammar-box">
+  <h3>Grammar : [name of the point in English — French translation]</h3>
+  <p class="grammar-intro">[Clear explanation in French, 2-3 sentences maximum]</p>
+
+  <table class="grammar-table">
+    <thead><tr><th>Form</th><th>Example in English</th><th>French translation</th></tr></thead>
+    <tbody>
+      <tr><td>...</td><td>...</td><td>...</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Examples from the dialogue:</strong></p>
+  <ul>
+    <li>[sentence from the dialogue in English] — [French translation]</li>
+    <li>[sentence from the dialogue in English] — [French translation]</li>
+  </ul>
+</div>
 """

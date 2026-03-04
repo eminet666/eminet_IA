@@ -3,52 +3,45 @@
 # Configuration ESPAGNOLE — tous les paramètres propres à l'espagnol
 # ============================================================
 
-# ── Paramètres modifiables facilement ───────────────────────
-
 EMAIL_RECIPIENTS = [
+    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
 ]
 
 LEVEL = "A2"
-
 AUDIO_RATE = "-25%"
-
 PAUSE_DURATION = 1000
 
-# ── Identité de l'agent ──────────────────────────────────────
 ACCENT_COLOR  = "#c60b1e"
 AGENT_PREFIX  = "espAgent"
 OUTPUT_PREFIX = "dialogue_espagnol"
 VOCAB_HEADER  = "Vocabulario"
 VOCAB_COL1    = "Espagnol"
 
-# ── Personnages et voix ──────────────────────────────────────
 CHARACTERS = {
     "Pablo":     {"voice": "es-ES-AlvaroNeural"},
     "Esperanza": {"voice": "es-ES-ElviraNeural"},
 }
 
-# ── Contexte narratif ────────────────────────────────────────
 CONTEXT = """
 CONTEXTE DES PERSONNAGES :
 - Pablo et Esperanza sont deux amis espagnols de Madrid
 - Ton simple, naturel et encourageant — adapté à un apprenant débutant
 """
 
-# ── Focus grammatical ────────────────────────────────────────
 GRAMMAR_FOCUS = """
-RÈGLES POUR LE VOCABULAIRE (niveau A2) :
-1. Mots utiles du dialogue — pas les ultra-basiques
-2. Pour les VERBES : infinitif + conjugaison présent 1ère personne
-   Exemple : querer -> quiero, poder -> puedo, ir -> voy
+RÈGLES STRICTES POUR LE CHOIX DES MOTS :
+1. Sélectionne uniquement les mots utiles et un peu difficiles du dialogue — pas les mots ultra-basiques
+2. Pour les VERBES : donner l'infinitif + la conjugaison au présent à la 1ère personne
+   Exemple : <strong>querer → quiero</strong>, <strong>poder → puedo</strong>, <strong>ir → voy</strong>
 3. Pour les NOMS : inclure l'article défini (el, la, los, las)
-4. Pour les EXPRESSIONS utiles : telles quelles
-   Exemple : ¿cuánto cuesta?, me gustaría, ¿a qué hora?
-5. AUCUNE REDONDANCE : chaque entrée une seule fois
-6. Environ 20-25 entrées issues du dialogue
+   Exemple : <strong>la tienda</strong>, <strong>el mercado</strong>
+4. Pour les expressions utiles : les donner telles quelles
+   Exemple : <strong>¿cuánto cuesta?</strong>, <strong>me gustaría</strong>
+5. AUCUNE REDONDANCE : chaque mot ou expression une seule fois
+6. Environ 20-25 entrées, toutes issues du dialogue
 """
 
-# ── Sujets ───────────────────────────────────────────────────
 TOPICS = [
     "Se présenter et parler de sa famille",
     "Commander au café ou au restaurant",
@@ -84,7 +77,6 @@ TOPICS = [
     "Les marchés de Noël en Espagne",
 ]
 
-# ── Prompt ───────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
 Crée un dialogue en espagnol (niveau {level}) entre Pablo et Esperanza,
 sur le sujet suivant : {sujet}
@@ -114,4 +106,27 @@ Colonnes : {vocab_col1} | Français | Exemple
   <thead><tr><th>{vocab_col1}</th><th>Français</th><th>Exemple</th></tr></thead>
   <tbody><tr><td><strong>mot</strong></td><td>traduction</td><td>exemple</td></tr></tbody>
 </table>
+
+POINT DE GRAMMAIRE :
+Après le vocabulaire, identifie UNE structure grammaticale accessible au niveau {level} présente
+dans le dialogue (ex : ser vs estar, présent irrégulier, genre des noms, accord adjectif...).
+Crée une section "Gramática" avec ce format :
+
+<div class="grammar-box">
+  <h3>Gramática : [nom du point en espagnol — traduction en français]</h3>
+  <p class="grammar-intro">[Explication simple en français, 2-3 phrases maximum]</p>
+
+  <table class="grammar-table">
+    <thead><tr><th>Forme</th><th>Exemple en espagnol</th><th>Traduction</th></tr></thead>
+    <tbody>
+      <tr><td>...</td><td>...</td><td>...</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Exemples tirés du dialogue :</strong></p>
+  <ul>
+    <li>[phrase du dialogue en espagnol] — [traduction française]</li>
+    <li>[phrase du dialogue en espagnol] — [traduction française]</li>
+  </ul>
+</div>
 """

@@ -7,11 +7,6 @@ from weasyprint import HTML
 
 
 def generate_pdf(html_content, lang, title, config, output_file):
-    """
-    Génère un PDF stylisé.
-    La couleur d'accent est lue depuis lang.ACCENT_COLOR.
-    Les paramètres de mise en page viennent de config (PDF_PAGE_SIZE, etc.)
-    """
     print("- Génération du PDF...")
 
     pdf_title = title or "Dialogue"
@@ -39,35 +34,18 @@ def generate_pdf(html_content, lang, title, config, output_file):
             padding-bottom: 10px;
             border-bottom: 2px solid {c};
         }}
-        .header h1 {{
-            color: #2c3e50;
-            font-size: 20px;
-            margin: 5px 0;
-        }}
-        .header .date {{
-            color: #7f8c8d;
-            font-size: 11px;
-        }}
+        .header h1 {{ color: #2c3e50; font-size: 20px; margin: 5px 0; }}
+        .header .date {{ color: #7f8c8d; font-size: 11px; }}
         .dialogue {{
             background-color: #f9f9f9;
             padding: 12px;
             border-radius: 5px;
             margin-bottom: 15px;
         }}
-        .dialogue h3 {{
-            color: #34495e;
-            margin-top: 0;
-            margin-bottom: 12px;
-            font-size: 16px;
-        }}
-        .dialogue p {{
-            margin: 6px 0;
-            font-size: {config.FONT_SIZE_BODY};
-        }}
-        .dialogue strong {{
-            color: #2c3e50;
-            font-weight: bold;
-        }}
+        .dialogue h3 {{ color: #34495e; margin-top: 0; margin-bottom: 12px; font-size: 16px; }}
+        .dialogue p {{ margin: 6px 0; font-size: {config.FONT_SIZE_BODY}; }}
+        .dialogue strong {{ color: #2c3e50; font-weight: bold; }}
+        /* ── Vocabulaire ── */
         .vocab-table {{
             width: 100%;
             border-collapse: collapse;
@@ -81,22 +59,32 @@ def generate_pdf(html_content, lang, title, config, output_file):
             text-align: left;
             font-weight: bold;
         }}
-        .vocab-table td {{
-            border: 1px solid #ddd;
-            padding: 3px 4px;
-            vertical-align: top;
-            line-height: 1.3;
-        }}
-        .vocab-table tr:nth-child(even) {{
-            background-color: #f9f9f9;
-        }}
-        .vocab-table td:first-child {{
-            font-weight: bold;
-            color: #2c3e50;
-            width: 18%;
-        }}
+        .vocab-table td {{ border: 1px solid #ddd; padding: 3px 4px; vertical-align: top; line-height: 1.3; }}
+        .vocab-table tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        .vocab-table td:first-child {{ font-weight: bold; color: #2c3e50; width: 18%; }}
         .vocab-table td:nth-child(2) {{ width: 22%; }}
         .vocab-table td:nth-child(3) {{ width: 60%; }}
+        /* ── Point de grammaire ── */
+        .grammar-box {{
+            background-color: #f0f7ff;
+            border-left: 4px solid {c};
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }}
+        .grammar-box h3 {{ color: #2c3e50; font-size: 15px; margin-top: 0; margin-bottom: 8px; }}
+        .grammar-intro {{ margin: 6px 0 12px 0; }}
+        .grammar-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: {config.FONT_SIZE_BODY};
+        }}
+        .grammar-table th {{ background-color: #5d6d7e; color: white; padding: 4px; text-align: left; }}
+        .grammar-table td {{ border: 1px solid #ddd; padding: 3px 5px; vertical-align: top; }}
+        .grammar-table tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        .grammar-box ul {{ margin: 6px 0; padding-left: 20px; }}
+        .grammar-box li {{ margin: 4px 0; }}
     </style>
 </head>
 <body>

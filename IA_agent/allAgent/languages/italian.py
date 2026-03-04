@@ -3,32 +3,26 @@
 # Configuration ITALIENNE — tous les paramètres propres à l'italien
 # ============================================================
 
-# ── Paramètres modifiables facilement ───────────────────────
-
 EMAIL_RECIPIENTS = [
+    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
 ]
 
 LEVEL = "B2"
-
 AUDIO_RATE = "-20%"
-
 PAUSE_DURATION = 900
 
-# ── Identité de l'agent ──────────────────────────────────────
 ACCENT_COLOR  = "#009246"
 AGENT_PREFIX  = "italAgent"
 OUTPUT_PREFIX = "dialogue_italien"
 VOCAB_HEADER  = "Vocabolario"
 VOCAB_COL1    = "Italien"
 
-# ── Personnages et voix ──────────────────────────────────────
 CHARACTERS = {
     "Marco": {"voice": "it-IT-DiegoNeural"},
     "Sofia": {"voice": "it-IT-ElsaNeural"},
 }
 
-# ── Contexte narratif ────────────────────────────────────────
 CONTEXT = """
 CONTEXTE DES PERSONNAGES :
 - Marco et Sofia sont deux amis italiens cultivés et curieux
@@ -36,7 +30,6 @@ CONTEXTE DES PERSONNAGES :
 - Ton naturel, chaleureux et spontané
 """
 
-# ── Focus grammatical ────────────────────────────────────────
 GRAMMAR_FOCUS = """
 RÈGLES POUR LE VOCABULAIRE :
 1. Mots utiles et un peu difficiles uniquement — pas les ultra-basiques
@@ -47,7 +40,6 @@ RÈGLES POUR LE VOCABULAIRE :
 5. Environ 20-25 entrées issues du dialogue
 """
 
-# ── Sujets ───────────────────────────────────────────────────
 TOPICS = [
     "Un aperitivo tra amici",
     "Al mercato rionale",
@@ -84,7 +76,6 @@ TOPICS = [
     "Un appuntamento romantico a Verona",
 ]
 
-# ── Prompt ───────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
 Crée un dialogue en italien (niveau {level}) entre Marco et Sofia,
 sur le sujet suivant : {sujet}
@@ -108,4 +99,27 @@ Colonnes : {vocab_col1} | Français | Exemple
   <thead><tr><th>{vocab_col1}</th><th>Français</th><th>Exemple</th></tr></thead>
   <tbody><tr><td><strong>mot</strong></td><td>traduction</td><td>exemple</td></tr></tbody>
 </table>
+
+POINT DE GRAMMAIRE :
+Après le vocabulaire, identifie UNE structure grammaticale importante présente dans le dialogue
+(ex : subjonctif, conditionnel, gérondif, accord du participe passé, pronoms...).
+Crée une section "Grammatica" avec ce format :
+
+<div class="grammar-box">
+  <h3>Grammatica : [nom du point en italien — traduction en français]</h3>
+  <p class="grammar-intro">[Explication claire en français, 2-3 phrases maximum]</p>
+
+  <table class="grammar-table">
+    <thead><tr><th>Forme</th><th>Exemple en italien</th><th>Traduction</th></tr></thead>
+    <tbody>
+      <tr><td>...</td><td>...</td><td>...</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Exemples tirés du dialogue :</strong></p>
+  <ul>
+    <li>[phrase du dialogue en italien] — [traduction française]</li>
+    <li>[phrase du dialogue en italien] — [traduction française]</li>
+  </ul>
+</div>
 """

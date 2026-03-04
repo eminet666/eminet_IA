@@ -5,18 +5,15 @@
 
 # ── Paramètres modifiables facilement ───────────────────────
 
-# Destinataires spécifiques à cette langue
 EMAIL_RECIPIENTS = [
+    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
 ]
 
-# Niveau CECRL : A1, A2, B1, B2, C1, C2
 LEVEL = "C1"
 
-# Vitesse audio : "0%" normal | "-10%" léger | "-20%" lent | "-30%" très lent
 AUDIO_RATE = "-20%"
 
-# Pause entre les répliques (ms)
 PAUSE_DURATION = 900
 
 # ── Identité de l'agent ──────────────────────────────────────
@@ -43,7 +40,6 @@ CONTEXTE DES PERSONNAGES (à intégrer naturellement dans le dialogue) :
 """
 
 # ── Focus grammatical ────────────────────────────────────────
-# Modifie cette section pour orienter les points de grammaire du vocabulaire
 GRAMMAR_FOCUS = """
 RÈGLES STRICTES POUR LE VOCABULAIRE :
 1. Uniquement les mots difficiles et rares du dialogue — pas les mots courants
@@ -121,4 +117,27 @@ Colonnes : {vocab_col1} | Français | Exemple
   <thead><tr><th>{vocab_col1}</th><th>Français</th><th>Exemple</th></tr></thead>
   <tbody><tr><td><strong>mot</strong></td><td>traduction</td><td>exemple</td></tr></tbody>
 </table>
+
+POINT DE GRAMMAIRE :
+Après le vocabulaire, identifie UNE structure grammaticale importante présente dans le dialogue
+(ex : voix passive, subjonctif, gérondif, système des cas, aspect verbal...).
+Crée une section "Γραμματική" avec ce format :
+
+<div class="grammar-box">
+  <h3>Γραμματική : [nom du point en grec — traduction en français]</h3>
+  <p class="grammar-intro">[Explication claire en français, 2-3 phrases maximum]</p>
+
+  <table class="grammar-table">
+    <thead><tr><th>Forme</th><th>Exemple en grec</th><th>Traduction</th></tr></thead>
+    <tbody>
+      <tr><td>...</td><td>...</td><td>...</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Exemples tirés du dialogue :</strong></p>
+  <ul>
+    <li>[phrase du dialogue en grec] — [traduction française]</li>
+    <li>[phrase du dialogue en grec] — [traduction française]</li>
+  </ul>
+</div>
 """
