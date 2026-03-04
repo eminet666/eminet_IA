@@ -6,8 +6,8 @@
 # ── Paramètres modifiables facilement ───────────────────────
 
 EMAIL_RECIPIENTS = [
-    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
+    "anne.lafond@ensaama.net"
 ]
 
 LEVEL = "C1"
