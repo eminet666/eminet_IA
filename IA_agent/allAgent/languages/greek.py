@@ -6,8 +6,8 @@
 # ── Paramètres modifiables facilement ───────────────────────
 
 EMAIL_RECIPIENTS = [
+    "eric.sandillon@ensaama.net",
     "eminet666@gmail.com",
-    "anne.lafond@ensaama.net"
 ]
 
 LEVEL = "C1"
@@ -175,24 +175,27 @@ Présente un exposé complet et pédagogique sur le thème suivant :
 Ce point est INDÉPENDANT du dialogue — construis tes propres exemples clairs et représentatifs.
 L'objectif est la révision approfondie d'un point de grammaire grecque pour un apprenant de niveau {level}.
 
+LANGUE DE L'EXPLICATION : tout le texte explicatif (intro, en-têtes du tableau, commentaires)
+doit être rédigé EN FRANÇAIS. Seuls les exemples grecs et les formes du tableau sont en grec.
+
 Crée une section "Γραμματική" avec ce format :
 
 <div class="grammar-box">
   <h3>Γραμματική : [titre du point en grec — traduction en français]</h3>
-  <p class="grammar-intro">[Explication claire en français, 3-4 phrases — règle, formation, usage]</p>
+  <p class="grammar-intro">[Explication complète EN FRANÇAIS : règle, formation, usage, pièges éventuels — 4-5 phrases]</p>
 
   <table class="grammar-table">
-    <thead><tr><th>Forme</th><th>Exemple en grec</th><th>Traduction</th></tr></thead>
+    <thead><tr><th>Forme</th><th>Exemple en grec</th><th>Traduction en français</th></tr></thead>
     <tbody>
-      <tr><td>...</td><td>...</td><td>...</td></tr>
+      <tr><td>[nom de la forme EN FRANÇAIS]</td><td>[exemple grec]</td><td>[traduction française]</td></tr>
     </tbody>
   </table>
 
   <p><strong>Exemples en contexte :</strong></p>
   <ul>
-    <li>[phrase d'exemple construite en grec] — [traduction française]</li>
-    <li>[phrase d'exemple construite en grec] — [traduction française]</li>
-    <li>[phrase d'exemple construite en grec] — [traduction française]</li>
+    <li>[phrase construite en grec] — [traduction française]</li>
+    <li>[phrase construite en grec] — [traduction française]</li>
+    <li>[phrase construite en grec] — [traduction française]</li>
   </ul>
 </div>
 """

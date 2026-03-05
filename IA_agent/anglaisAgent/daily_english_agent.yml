@@ -2,7 +2,7 @@ name: Daily English Learning Agent
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # 9h du matin à Paris (UTC+1)
+    - cron: "0 6 * * *"  # 9h du matin à Paris (UTC+1)
   workflow_dispatch:
 
 jobs:
