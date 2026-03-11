@@ -4,6 +4,6 @@
 
 mistralai==1.2.5
 python-dotenv==1.0.1
-edge-tts==6.1.12
+edge-tts>=6.1.18
 pydub==0.25.1
-weasyprint==62.3
+weasyprint==60.2
