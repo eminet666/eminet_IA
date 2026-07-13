@@ -4,7 +4,7 @@
 # ============================================================
 
 EMAIL_RECIPIENTS = [
-    "eric.sandillon@ensaama.net, eminet666@gmail.com, juliette.lafond53@gmail.com"
+    "eric.sandillon@ensaama.net, juliette.lafond53@gmail.com"
 ]
 
 LEVEL = "B2"

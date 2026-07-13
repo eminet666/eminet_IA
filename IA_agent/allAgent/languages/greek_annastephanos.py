@@ -31,13 +31,11 @@ CHARACTERS = {
 # ── Contexte narratif ────────────────────────────────────────
 CONTEXT = """
 CONTEXTE DES PERSONNAGES (à intégrer naturellement dans le dialogue) :
-- Stephanos est enseignant de design numérique dans une école d'art à Athènes
-- Il enseigne la réalité virtuelle, la modélisation 3D et l'animation
-- Il utilise tout le vocabulaire technique du design numérique et de l'informatique dans ses cours
-- Chaque dialogue doit inclure des termes techniques liés au design numérique et à l'informatique
-- Chaque dialogue est un cours différent Les étudiants posent des questions sur les logiciels et les techniques
-- Ses etudiants sont des jeunes adultes de 20 à 25 ans, passionnés par le design et la technologie
-- Préciser comment prononcer les séquences de touches de clavier et les commandes informatiques (ex. : Ctrl + C, Alt + Tab, Shift + clic droit)
+- Stephanos et Anna sont amoureux l'un de l'autre
+- Anna a divorcé récemment et garde ses enfants une semaine sur deux
+- Anna est artiste : elle peint des tableaux des Cyclades
+- Anna crée aussi des bagues ornées de miniatures peintes sur motifs grecs
+- Ton tendre, complice, parfois sensuel — séduction et compliments bienvenus
 """
 
 # ── Focus grammatical (règles pour le tableau de vocabulaire) ─
@@ -48,7 +46,7 @@ RÈGLES STRICTES POUR LE VOCABULAIRE :
    - Voix active  : présent actif / aoriste actif
    - Voix passive : présent passif / aoriste passif (si elle existe)
    Exemple : αγαπώ / αγάπησα | αγαπιέμαι / αγαπήθηκα
-3. Pour les NOMS : inclure l'article défini (ο, η, το)
+3. Pour les NOMS rares : inclure l'article défini (ο, η, το)
 4. AUCUNE REDONDANCE : chaque mot une seule fois
 5. Environ 20-25 entrées issues du dialogue
 """
@@ -105,36 +103,48 @@ GRAMMAR_TOPICS = [
 
 # ── Sujets ───────────────────────────────────────────────────
 TOPICS = [
-    "Manipulation de fichiers informatiques",
-    "Téléchargement et installation de logiciels",
-    "A propos de l'interface utilisateur et de l'expérience utilisateur",
-    "Le vocavulaire technique de la programmation informatique",
-    "Les raccourcis clavier et les commandes informatiques",
-    "le vocabulaire technique de la réalité virtuelle et de la modélisation 3D",
-    "A propos de windows 11 et de ses fonctionnalités",
-    "A propos de Python et de ses bibliothèques",
-    "Installation de comfyUI et de ses dépendances",
-    "Utilisation de comfyUI pour générer des images",
-    "Créer une scène VR avec aframe",
-    "Tester la scène VR dans un navigateur web",
-    "Tester la scène VR dans un simulateur",
-    "Installation de Unity 6.0 sur Windows 11",
-    "Configuration de l'interface utilisateur dans Unity",
-    "Configuration des raccourcis clavier dans Unity",
-    "Configuration des préférences de projet dans Unity",
-    "Configuration des paramètres de rendu dans Unity",
-    "Installation de Blender 4.0 sur Windows 11",
-    "Configuration de l'interface utilisateur dans Blender",
-    "Configuration des raccourcis clavier dans Blender",
-    "Installation de Ollama sur Windows 11",
-    "Le vocabulaire technique de l'IA générative et des modèles de langage",
-    "les différentes typologies d'IA",
-    "Les différents types de modèles de langage et leurs usages",  
+    "Les courses au marché",
+    "Un dîner en famille",
+    "Une sortie au cinéma",
+    "Un problème de voisinage",
+    "Un voyage en bus",
+    "Une discussion sur la météo",
+    "Les plans pour le week-end",
+    "Une visite chez le médecin",
+    "L'organisation d'une fête",
+    "Une conversation au café",
+    "Les traditions grecques",
+    "Une journée à la plage",
+    "Les voyages en bateau",
+    "Les habitudes alimentaires",
+    "Les projets de vacances",
+    "La littérature grecque",
+    "La Crète", "Chios", "Samos", "Athènes", "Thessalonique",
+    "Les îles grecques",
+    "La musique grecque contemporaine",
+    "Le rébétiko",
+    "La cuisine grecque traditionnelle",
+    "Les sites archéologiques",
+    "La mythologie grecque",
+    "Les fêtes religieuses en Grèce",
+    "La guerre d'indépendance grecque",
+    "La philosophie stoïcienne",
+    "Les Jeux Olympiques antiques",
+    "Anna parle de ses peintures des Cyclades",
+    "Anna crée des bagues avec des miniatures peintes",
+    "Stephanos admire le travail artistique d'Anna",
+    "Anna et Stephanos planifient un voyage dans les Cyclades",
+    "Les enfants d'Anna et la vie de famille recomposée",
+    "Une soirée romantique entre Stephanos et Anna",
+    "Stephanos fait des compliments à Anna",
+    "Anna et Stephanos se confient leurs désirs",
+    "Anna parle de sa vie après son divorce",
+    "Une promenade romantique à Athènes",
 ]
 
 # ── Prompt ───────────────────────────────────────────────────
 PROMPT_TEMPLATE = """
-Crée un dialogue en grec moderne (niveau {level}) entre Stephanos et ses étudiants,
+Crée un dialogue en grec moderne (niveau {level}) entre Stephanos et Anna,
 sur le sujet suivant : {sujet}
 
 {context}

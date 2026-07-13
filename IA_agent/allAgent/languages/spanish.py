@@ -4,7 +4,7 @@
 # ============================================================
 
 EMAIL_RECIPIENTS = [
-    "lhonorececile@gmail.com, eminet666@gmail.com"
+    "lhonorececile@gmail.com"
 ]
 
 LEVEL = "A2"
