@@ -38,6 +38,7 @@ CONTEXTE DES PERSONNAGES (à intégrer naturellement dans le dialogue) :
 - Chaque dialogue est un cours différent Les étudiants posent des questions sur les logiciels et les techniques
 - Ses etudiants sont des jeunes adultes de 20 à 25 ans, passionnés par le design et la technologie
 - Préciser comment prononcer les séquences de touches de clavier et les commandes informatiques (ex. : Ctrl + C, Alt + Tab, Shift + clic droit)
+- Pour la liste de vocabulaire générée à la fin du dialogue, ne pas inclure les mots techniques anglais, mais uniquement les mots grecs rares et difficiles du dialogue, avec leur traduction en français et un exemple d'utilisation dans une phrase complète
 """
 
 # ── Focus grammatical (règles pour le tableau de vocabulaire) ─
